@@ -8,20 +8,15 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
     :root {
-      --bg: #0b1e13;
-      --pitch: #1f6b3b;
-      --pitch-lines: rgba(255, 255, 255, 0.4);
+      --bg: #070d09;
       --gold: #f59e0b;
       --card-bg: rgba(15, 23, 42, 0.95);
-      --red: #ef4444;
-      --blue: #3b82f6;
-      --yellow: #eab308;
-      --green: #22c55e;
+      --pitch-lines: rgba(255, 255, 255, 0.4);
       --ref: #a855f7;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #070d09; color: #fff; min-height: 100vh; overflow-x: hidden; }
+    body { background: var(--bg); color: #fff; min-height: 100vh; overflow-x: hidden; }
 
     /* VIEW SELECTOR */
     #view-select {
@@ -40,17 +35,14 @@
     .btn-red { background: #dc2626; color: #fff; }
     .btn-purple { background: var(--ref); color: #fff; }
 
-    /* FULLSCREEN BUTTON */
     #fs-toggle {
       position: fixed; top: 12px; right: 12px; z-index: 1000;
       background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
       color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
     }
 
-    /* TV VIEW */
+    /* TV PITCH WEERGAVE */
     #tv-view { display: none; width: 100vw; height: 100vh; position: relative; overflow: hidden; background: #07190e; }
-    
-    /* TV PITCH */
     .pitch-container {
       width: 100%; height: 100%; position: relative;
       background: radial-gradient(circle at center, #1b5e20 0%, #0d3813 100%);
@@ -69,7 +61,7 @@
       border-left: 4px solid var(--pitch-lines);
     }
 
-    /* TILES GRID ON PITCH */
+    /* TILES OP HET VELD */
     #board-grid {
       position: absolute; inset: 30px 290px 30px 30px; display: grid;
       grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(5, 1fr); gap: 8px;
@@ -80,33 +72,25 @@
       align-items: center; justify-content: space-between; padding: 4px;
       font-size: 0.7rem; font-weight: 700; color: #fff;
     }
-    .tile-num {
-      position: absolute; top: 3px; left: 5px; font-size: 0.75rem; font-weight: 900;
-      opacity: 0.6;
-    }
+    .tile-num { position: absolute; top: 3px; left: 5px; font-size: 0.75rem; font-weight: 900; opacity: 0.6; }
     .tile-icon { font-size: 1.3rem; margin-top: 8px; }
     .tile-name { text-align: center; line-height: 1; font-size: 0.65rem; opacity: 0.9; }
     .tile.special { border-color: var(--gold); background: rgba(245, 158, 11, 0.2); }
     .tile.start { border-color: #3b82f6; background: rgba(59, 130, 246, 0.25); }
     .tile.finish { border-color: #22c55e; background: rgba(34, 197, 94, 0.3); }
 
-    /* PLAYERS ON TILE */
     .tile-tokens {
       display: flex; gap: 4px; position: absolute; bottom: 4px; left: 50%;
-      transform: translateX(-50%); z-index: 10;
+      transform: translateX(-50%); z-index: 10; flex-wrap: wrap; justify-content: center; max-width: 90%;
     }
     .p-token {
-      width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff;
+      width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;
       display: flex; align-items: center; justify-content: center;
       font-size: 0.65rem; font-weight: 900; box-shadow: 0 2px 6px rgba(0,0,0,0.8);
       transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .token-merijn { background: var(--red); color: #fff; }
-    .token-cas { background: var(--blue); color: #fff; }
-    .token-niels { background: var(--yellow); color: #000; }
-    .token-melle { background: var(--green); color: #fff; }
 
-    /* TV SIDEBAR - LEADERBOARD */
+    /* TV SIDEBAR */
     .tv-sidebar {
       position: absolute; top: 20px; right: 20px; bottom: 20px; width: 240px;
       background: var(--card-bg); border: 2px solid rgba(255,255,255,0.15);
@@ -114,7 +98,7 @@
       backdrop-filter: blur(10px);
     }
     .sidebar-title { font-size: 0.9rem; text-transform: uppercase; color: var(--gold); font-weight: 900; letter-spacing: 1px; }
-    .leaderboard-list { display: flex; flex-direction: column; gap: 10px; }
+    .leaderboard-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
     .lb-card {
       background: rgba(255,255,255,0.06); padding: 10px; border-radius: 10px;
       border-left: 6px solid #fff; display: flex; flex-direction: column; gap: 2px;
@@ -123,9 +107,9 @@
     .lb-top { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 0.95rem; }
     .lb-sub { font-size: 0.75rem; opacity: 0.7; }
 
-    /* TV OVERLAYS */
+    /* OVERLAYS */
     .tv-overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+      position: absolute; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(12px);
       z-index: 100; display: flex; flex-direction: column; align-items: center;
       justify-content: center; padding: 30px; text-align: center;
     }
@@ -135,40 +119,55 @@
       display: flex; flex-direction: column; align-items: center; gap: 18px;
     }
 
-    /* 3D DICE ANIMATION */
-    .dice-container {
-      width: 110px; height: 110px; perspective: 600px; margin: 15px 0;
+    /* 3D DOBBELSTEEN ANIMATIE */
+    .dice-scene {
+      width: 140px; height: 140px; perspective: 800px; margin: 20px auto;
     }
-    .dice {
+    .dice-cube {
       width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
-      transition: transform 1.2s cubic-bezier(0.2, 0.85, 0.4, 1.2);
+      transform: rotateX(0deg) rotateY(0deg);
+      transition: transform 0.1s linear;
     }
-    .dice-face {
-      position: absolute; width: 110px; height: 110px; background: #fff;
-      border: 3px solid #cbd5e1; border-radius: 18px; display: grid; padding: 14px;
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.15);
+    .dice-cube.rolling {
+      animation: diceRollWild 0.25s infinite linear;
     }
-    .pip { width: 18px; height: 18px; background: #0f172a; border-radius: 50%; justify-self: center; align-self: center; }
+    @keyframes diceRollWild {
+      0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      100% { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+    }
+
+    .cube-face {
+      position: absolute; width: 140px; height: 140px; background: #ffffff;
+      border: 4px solid #cbd5e1; border-radius: 24px; display: grid; padding: 18px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .pip {
+      width: 22px; height: 22px; background: #0f172a; border-radius: 50%;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); justify-self: center; align-self: center;
+    }
     
-    /* Pip Grid Layouts */
-    .face-1 { transform: rotateY(0deg) translateZ(55px); display: flex; align-items: center; justify-content: center; }
-    .face-6 { transform: rotateY(180deg) translateZ(55px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
-    .face-2 { transform: rotateY(-90deg) translateZ(55px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    /* Vaste posities voor ogen */
+    .face-1 { transform: rotateY(0deg) translateZ(70px); display: flex; align-items: center; justify-content: center; }
+    .face-6 { transform: rotateY(180deg) translateZ(70px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    .face-2 { transform: rotateY(-90deg) translateZ(70px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
     .face-2 .pip:nth-child(2) { grid-column: 2; grid-row: 2; }
-    .face-5 { transform: rotateY(90deg) translateZ(55px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    .face-5 { transform: rotateY(90deg) translateZ(70px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
     .face-5 .pip:nth-child(1) { grid-column: 1; grid-row: 1; }
     .face-5 .pip:nth-child(2) { grid-column: 3; grid-row: 1; }
     .face-5 .pip:nth-child(3) { grid-column: 2; grid-row: 2; }
     .face-5 .pip:nth-child(4) { grid-column: 1; grid-row: 3; }
     .face-5 .pip:nth-child(5) { grid-column: 3; grid-row: 3; }
-    .face-3 { transform: rotateX(90deg) translateZ(55px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    .face-3 { transform: rotateX(90deg) translateZ(70px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
     .face-3 .pip:nth-child(1) { grid-column: 1; grid-row: 1; }
     .face-3 .pip:nth-child(2) { grid-column: 2; grid-row: 2; }
     .face-3 .pip:nth-child(3) { grid-column: 3; grid-row: 3; }
-    .face-4 { transform: rotateX(-90deg) translateZ(55px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .face-4 { transform: rotateX(-90deg) translateZ(70px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
 
-    /* MOBILE VIEWS */
-    #mobile-view { display: none; padding: 20px; max-width: 500px; margin: 0 auto; min-height: 100vh; flex-direction: column; gap: 16px; }
+    /* MOBIELE WEERGAVEN */
+    #mobile-view, #ref-view {
+      display: none; padding: 20px; max-width: 520px; margin: 0 auto; min-height: 100vh;
+      flex-direction: column; gap: 16px;
+    }
     .m-header {
       background: var(--card-bg); padding: 14px 18px; border-radius: 14px;
       display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);
@@ -183,24 +182,11 @@
     }
     .m-input:focus { border-color: var(--gold); outline: none; }
 
-    /* REFEREE VIEW */
-    #ref-view { display: none; padding: 20px; max-width: 600px; margin: 0 auto; min-height: 100vh; flex-direction: column; gap: 16px; }
-    .ref-answer-box {
-      background: #422006; border: 2px solid var(--gold); border-radius: 12px;
-      padding: 14px; color: #fef08a; font-weight: 700;
-    }
-
-    /* SIP POPUP NOTIFICATION */
     .sip-banner {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
       background: #e11d48; color: #fff; padding: 12px 24px; border-radius: 30px;
       font-size: 1.2rem; font-weight: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-      z-index: 2000; animation: bounceIn 0.4s ease; display: none;
-    }
-    @keyframes bounceIn {
-      0% { transform: translateX(-50%) scale(0.6); opacity: 0; }
-      80% { transform: translateX(-50%) scale(1.1); }
-      100% { transform: translateX(-50%) scale(1); opacity: 1; }
+      z-index: 2000; display: none; text-align: center; max-width: 90vw;
     }
   </style>
 </head>
@@ -209,10 +195,10 @@
   <button id="fs-toggle" onclick="toggleFullscreen()">⛶ Volledig Scherm</button>
   <div id="sip-alert" class="sip-banner">🍺 2 SLOKKEN DRINKEN!</div>
 
-  <!-- 1. VIEW SELECTOR -->
+  <!-- 1. ROLLEN KEUZEMENU -->
   <div id="view-select">
     <h1 style="font-size: 2.2rem; color: var(--gold); font-weight: 900;">⚽ GANZENBORD</h1>
-    <p style="opacity: 0.8; max-width: 380px;">Kies de rol van dit apparaat om te verbinden:</p>
+    <p style="opacity: 0.8; max-width: 380px;">Kies de rol van dit scherm:</p>
     
     <button class="btn btn-green" style="width: 100%; max-width: 320px;" onclick="initTV()">
       📺 1. Tablet / TV Weergave
@@ -225,39 +211,38 @@
     </button>
   </div>
 
-  <!-- 2. TV / TABLET SCHERM -->
+  <!-- 2. TV SCHERM -->
   <div id="tv-view">
     <div class="pitch-container">
       <div class="pitch-lines"></div>
       <div class="pitch-center-circle"></div>
       <div class="pitch-midline"></div>
 
-      <!-- SPEELBORD TILES -->
       <div id="board-grid"></div>
 
-      <!-- RECHTS: RANGLIJST -->
       <div class="tv-sidebar">
         <div class="sidebar-title">📊 Afstand tot Finish</div>
         <div class="leaderboard-list" id="tv-leaderboard"></div>
-
         <div style="margin-top: auto; font-size: 0.75rem; opacity: 0.5; text-align: center;">
           Kamer Code: <span id="tv-room-code-badge" style="color:var(--gold); font-weight:900;">----</span>
         </div>
       </div>
     </div>
 
-    <!-- TV OVERLAY: WACHTRUIMTE / LOBBY -->
+    <!-- LOBBY OVERLAY -->
     <div id="tv-lobby-overlay" class="tv-overlay">
       <div class="overlay-box">
         <h1 style="color: var(--gold); font-size: 2.2rem;">⚽ KLEEDKAMER LOBBY</h1>
-        <p style="font-size: 1.1rem; opacity: 0.8;">Ga op je eigen mobiel naar deze site en vul de kamercode in:</p>
-        <div id="tv-room-code" style="font-size: 4rem; font-weight: 900; letter-spacing: 6px; color: #fff; background: #1e293b; padding: 10px 30px; border-radius: 16px; border: 2px dashed var(--gold);">
+        <p style="font-size: 1.1rem; opacity: 0.8;">Ga op je mobiel naar de site en vul deze kamercode in:</p>
+        <div id="tv-room-code" style="font-size: 4.5rem; font-weight: 900; letter-spacing: 6px; color: #fff; background: #1e293b; padding: 10px 36px; border-radius: 16px; border: 2px dashed var(--gold);">
           ....
         </div>
         
         <div style="width: 100%; margin-top: 15px;">
-          <h3 style="font-size: 1rem; text-transform: uppercase; margin-bottom: 12px; opacity: 0.7;">Verbonden Spelers (4/4):</h3>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;" id="tv-lobby-players"></div>
+          <h3 style="font-size: 1rem; text-transform: uppercase; margin-bottom: 12px; opacity: 0.7;" id="tv-lobby-count">
+            Verbonden Spelers (0)
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;" id="tv-lobby-players"></div>
         </div>
 
         <div id="tv-lobby-msg" style="margin-top: 10px; color: var(--gold); font-weight: 700;">
@@ -266,35 +251,34 @@
       </div>
     </div>
 
-    <!-- TV OVERLAY: WIEGELOOT RONDE (WIE BEGINT?) -->
+    <!-- WIEGELOOT OVERLAY -->
     <div id="tv-roll-order-overlay" class="tv-overlay" style="display: none;">
       <div class="overlay-box">
         <h2 style="color: var(--gold);">🎲 Wiegeloot-ronde</h2>
-        <p>Iedereen gooit met zijn eigen mobiel. Wie het hoogste gooit begint!</p>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; margin-top: 20px;" id="tv-roll-order-grid"></div>
+        <p>Iedereen gooit op zijn eigen telefoon. De hoogste worp begint!</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; width: 100%; margin-top: 20px;" id="tv-roll-order-grid"></div>
       </div>
     </div>
 
-    <!-- TV OVERLAY: DOBBELSTEEN ACTIEVE BEURT -->
+    <!-- DOBBEL OVERLAY MET 3D CUBE -->
     <div id="tv-dice-overlay" class="tv-overlay" style="display: none;">
       <div class="overlay-box">
-        <h2 id="tv-dice-turn-player" style="font-size: 1.8rem;">Merijn is aan de beurt</h2>
+        <h2 id="tv-dice-turn-player" style="font-size: 1.8rem;">Speler is aan de beurt</h2>
         
-        <div class="dice-container">
-          <div class="dice" id="tv-dice">
-            <div class="dice-face face-1"><div class="pip"></div></div>
-            <div class="dice-face face-6">
+        <div class="dice-scene">
+          <div class="dice-cube" id="tv-dice-cube">
+            <div class="cube-face face-1"><div class="pip"></div></div>
+            <div class="cube-face face-6">
               <div class="pip"></div><div class="pip"></div><div class="pip"></div>
               <div class="pip"></div><div class="pip"></div><div class="pip"></div>
             </div>
-            <div class="dice-face face-2"><div class="pip"></div><div class="pip"></div></div>
-            <div class="dice-face face-5">
-              <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+            <div class="cube-face face-2"><div class="pip"></div><div class="pip"></div></div>
+            <div class="cube-face face-5">
+              <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+              <div class="pip"></div><div class="pip"></div>
             </div>
-            <div class="dice-face face-3"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
-            <div class="dice-face face-4">
-              <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
-            </div>
+            <div class="cube-face face-3"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+            <div class="cube-face face-4"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
           </div>
         </div>
 
@@ -304,7 +288,7 @@
       </div>
     </div>
 
-    <!-- TV OVERLAY: VRAAG SCHERM -->
+    <!-- VRAAG OVERLAY -->
     <div id="tv-question-overlay" class="tv-overlay" style="display: none;">
       <div class="overlay-box">
         <div id="tv-q-cat" style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.1);">
@@ -314,13 +298,13 @@
           Vraagtekst komt hier...
         </h2>
         <div id="tv-q-status" style="font-size: 1.1rem; color: var(--gold); font-weight: 700;">
-          Spelers voeren hun antwoord in op mobiel...
+          Spelers voeren antwoord in op mobiel...
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 3. MOBIELE WEERGAVE (VOOR SPELERS) -->
+  <!-- 3. MOBIEL: SPELER -->
   <div id="mobile-view">
     <div class="m-header">
       <div>
@@ -332,34 +316,66 @@
       </div>
     </div>
 
-    <!-- LOBBY WACHTEN OP MOBIEL -->
     <div id="m-lobby-card" class="m-card" style="text-align: center;">
       <h3 style="color: var(--gold);">In de Kleedkamer</h3>
-      <p style="opacity: 0.8;">Je bent verbonden! Kijk naar de TV tot de scheidsrechter het spel start.</p>
+      <p style="opacity: 0.8;">Je bent geregistreerd! Kijk naar de TV tot de scheidsrechter start.</p>
     </div>
 
-    <!-- WIEGELOOT ROLLEN OP MOBIEL -->
     <div id="m-roll-order-card" class="m-card" style="display: none; text-align: center;">
-      <h3>🎲 Gooi voor Startvolgorde!</h3>
-      <p style="opacity: 0.8;">Wie het hoogste gooit begint als eerste.</p>
+      <h3>🎲 Wiegeloot-worp</h3>
+      <p style="opacity: 0.8;">Rol om te zien wie als eerste mag starten!</p>
+      
+      <div class="dice-scene" style="width: 100px; height: 100px;">
+        <div class="dice-cube" id="m-order-dice" style="transform: scale(0.7) rotateY(0deg);">
+          <div class="cube-face face-1"><div class="pip"></div></div>
+          <div class="cube-face face-6">
+            <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+            <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+          </div>
+          <div class="cube-face face-2"><div class="pip"></div><div class="pip"></div></div>
+          <div class="cube-face face-5">
+            <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+            <div class="pip"></div><div class="pip"></div>
+          </div>
+          <div class="cube-face face-3"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+          <div class="cube-face face-4"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+        </div>
+      </div>
+
       <button class="btn btn-yellow" style="width: 100%; margin-top: 10px;" id="m-btn-roll-order" onclick="playerRollOrder()">
         Gooi Dobbelsteen!
       </button>
-      <div id="m-roll-order-result" style="font-size: 2.5rem; font-weight: 900; margin-top: 10px; color: var(--gold);"></div>
+      <div id="m-roll-order-result" style="font-size: 1.8rem; font-weight: 900; margin-top: 10px; color: var(--gold);"></div>
     </div>
 
-    <!-- MIJN BEURT OM TE ROLLEN -->
     <div id="m-turn-card" class="m-card" style="display: none; text-align: center;">
       <h2 style="color: var(--gold);">Jij bent aan de beurt!</h2>
-      <button class="btn btn-green" id="m-btn-roll" style="width: 100%; font-size: 1.3rem; padding: 20px;" onclick="playerRollDice()">
+      
+      <div class="dice-scene" style="width: 100px; height: 100px;">
+        <div class="dice-cube" id="m-turn-dice" style="transform: scale(0.7) rotateY(0deg);">
+          <div class="cube-face face-1"><div class="pip"></div></div>
+          <div class="cube-face face-6">
+            <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+            <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+          </div>
+          <div class="cube-face face-2"><div class="pip"></div><div class="pip"></div></div>
+          <div class="cube-face face-5">
+            <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+            <div class="pip"></div><div class="pip"></div>
+          </div>
+          <div class="cube-face face-3"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+          <div class="cube-face face-4"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+        </div>
+      </div>
+
+      <button class="btn btn-green" id="m-btn-roll" style="width: 100%; font-size: 1.2rem; padding: 18px;" onclick="playerRollDice()">
         🎲 Rol de Dobbelsteen!
       </button>
-      <button class="btn btn-yellow" id="m-btn-step" style="display: none; width: 100%; font-size: 1.3rem; padding: 20px;" onclick="playerExecuteSteps()">
+      <button class="btn btn-yellow" id="m-btn-step" style="display: none; width: 100%; font-size: 1.2rem; padding: 18px;" onclick="playerExecuteSteps()">
         🏃 Zet Stappen!
       </button>
     </div>
 
-    <!-- ANTWOORD INVOEREN OP MOBIEL -->
     <div id="m-answer-card" class="m-card" style="display: none;">
       <h3 id="m-q-cat" style="color: var(--gold); font-size: 0.9rem; text-transform: uppercase;">Categorie</h3>
       <p id="m-q-text" style="font-size: 1.1rem; font-weight: 700;">Vraag komt hier...</p>
@@ -371,7 +387,7 @@
     </div>
   </div>
 
-  <!-- 4. SCHEIDSRECHTER WEERGAVE (OP JOUW TELEFOON) -->
+  <!-- 4. MOBIEL: SCHEIDSRECHTER -->
   <div id="ref-view">
     <div class="m-header" style="border-left: 6px solid var(--ref);">
       <div>
@@ -383,21 +399,19 @@
       </div>
     </div>
 
-    <!-- LOBBY BEDIENING -->
     <div id="ref-lobby-card" class="m-card">
-      <h3>Spelers in Lobby:</h3>
+      <h3 id="ref-player-count">Aangemelde Spelers (0):</h3>
       <div id="ref-player-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
-      <button class="btn btn-green" style="width: 100%; margin-top: 10px;" onclick="refStartWiegeloot()">
+      <button class="btn btn-green" id="ref-btn-start" style="width: 100%; margin-top: 10px;" onclick="refStartWiegeloot()">
         Start Spel (Wiegeloot-ronde)
       </button>
     </div>
 
-    <!-- SCHEIDSRECHTER BEOORDELING VAN ANTWOORDEN -->
     <div id="ref-judge-card" class="m-card" style="display: none;">
       <div style="font-size: 0.8rem; color: var(--gold); text-transform: uppercase; font-weight: 800;">Actuele Vraag</div>
       <p id="ref-q-text" style="font-weight: 700;"></p>
       
-      <div class="ref-answer-box">
+      <div style="background: #422006; border: 2px solid var(--gold); border-radius: 12px; padding: 14px; color: #fef08a; font-weight: 700;">
         <span style="font-size: 0.75rem; text-transform: uppercase; display: block; opacity: 0.8;">Geheim Antwoord:</span>
         <span id="ref-q-secret-ans">...</span>
       </div>
@@ -410,7 +424,6 @@
       </button>
     </div>
 
-    <!-- EXTRA SCHEIDSRECHTERS-STRAFFEN -->
     <div class="m-card">
       <h4 style="color: var(--gold);">⚡ Scheidsrechter Straffen</h4>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -428,24 +441,28 @@
   </div>
 
   <script>
-    /* ========================================================
-       DATA & CONSTANTEN
-       ======================================================== */
-    const PLAYERS = [
-      { id: 'p1', name: 'Merijn', color: '#ef4444', class: 'token-merijn', pos: 1, sips: 0, orderRoll: 0, connected: false },
-      { id: 'p2', name: 'Cas',    color: '#3b82f6', class: 'token-cas',    pos: 1, sips: 0, orderRoll: 0, connected: false },
-      { id: 'p3', name: 'Niels',  color: '#eab308', class: 'token-niels',  pos: 1, sips: 0, orderRoll: 0, connected: false },
-      { id: 'p4', name: 'Melle',  color: '#22c55e', class: 'token-melle',  pos: 1, sips: 0, orderRoll: 0, connected: false }
-    ];
+    /* DYNAMISCHE KLEUREN VOOR SPELERS DIE ZICH AANMELDEN */
+    const PLAYER_COLORS = ['#ef4444', '#3b82f6', '#eab308', '#22c55e', '#ec4899', '#06b6d4', '#f97316'];
+    let PLAYERS = [];
 
     let refSips = 0;
-    let turnOrder = ['p1', 'p2', 'p3', 'p4'];
+    let turnOrder = [];
     let currentTurnIndex = 0;
     let pendingRoll = 0;
     let currentQ = null;
     let receivedAnswers = {};
 
-    // 45 GANZENBORD VAKJES
+    /* ROTATIE TARGETS VOOR DE CUBE */
+    const DICE_ROTATIONS = {
+      1: { x: 0, y: 0 },
+      6: { x: 0, y: 180 },
+      2: { x: 0, y: 90 },
+      5: { x: 0, y: -90 },
+      3: { x: -90, y: 0 },
+      4: { x: 90, y: 0 }
+    };
+
+    /* 45 GANZENBORD VAKJES */
     const BOARD_TILES = [];
     const CATEGORIES = [
       { id: 'roemenie', name: '🇷🇴 Roemeens Voetbal', icon: '🇷🇴' },
@@ -475,24 +492,20 @@
       BOARD_TILES.push({ num: i, type, icon, name, cat });
     }
 
-    // VRAGEN DATABASE
     const QUESTIONS = [
       { cat: 'roemenie', q: 'Welke Roemeense club won in 1986 de Europacup 1 door Barcelona na penalty\'s te verslaan?', a: 'Steaua Boekarest', group: true },
       { cat: 'roemenie', q: 'Welke legendarische spelmaker stond bekend als "De Maradona van de Karpaten"?', a: 'Gheorghe Hagi', group: false },
       { cat: 'wk', q: 'In welk land werd het allereerste WK voetbal in 1930 gehouden?', a: 'Uruguay', group: true },
       { cat: 'wk', q: 'Wie maakte in de finale van 2014 in de verlenging het winnende doelpunt voor Duitsland tegen Argentinië?', a: 'Mario Götze', group: false },
-      { cat: 'audio', q: 'Maak het legendarische citaat van Jack van Gelder in 1998 af: "DENNIS BERGKAMP! DENNIS BERGKAMP! ..."', a: '"...BERRRGKAMP! BERRRGKAMP!" (of emotioneel geschreeuw)', group: true },
+      { cat: 'audio', q: 'Maak het legendarische citaat van Jack van Gelder in 1998 af: "DENNIS BERGKAMP! DENNIS BERGKAMP! ..."', a: '"...BERRRGKAMP! BERRRGKAMP!"', group: true },
       { cat: 'algemeen', q: 'Welke club won de Champions League drie keer op rij tussen 2016 en 2018?', a: 'Real Madrid', group: false },
       { cat: 'kelder', q: 'Wat is de officiële straf als een speler de hoekvlag meeneemt naar de kantine na de wedstrijd?', a: 'Een rondje geven / Kist bier', group: false },
       { cat: 'var', q: 'Mag de scheidsrechter een rode kaart geven nadat het eindsignaal al heeft geklonken?', a: 'Ja (zolang de scheidsrechter nog op het veld is)', group: false }
     ];
 
-    /* ========================================================
-       PEERJS NETWERK SYNC
-       ======================================================== */
     let peer = null;
-    let connections = []; // TV bewaart alle connecties
-    let clientConn = null; // Mobiel/Ref bewaart connectie naar TV
+    let connections = [];
+    let clientConn = null;
     let myRole = '';
     let myPlayerId = '';
 
@@ -500,7 +513,7 @@
       return Math.floor(1000 + Math.random() * 9000).toString();
     }
 
-    // 1. INIT TV
+    /* 1. TV INIT */
     function initTV() {
       myRole = 'tv';
       document.getElementById('view-select').style.display = 'none';
@@ -523,21 +536,24 @@
 
     function renderLobbyTV() {
       const container = document.getElementById('tv-lobby-players');
+      document.getElementById('tv-lobby-count').innerText = `Verbonden Spelers (${PLAYERS.length})`;
+      if (PLAYERS.length === 0) {
+        container.innerHTML = '<div style="grid-column: 1/-1; opacity:0.5;">Nog geen spelers verbonden...</div>';
+        return;
+      }
       container.innerHTML = PLAYERS.map(p => `
-        <div style="background: ${p.connected ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)'};
-                    border: 2px solid ${p.connected ? p.color : 'rgba(255,255,255,0.1)'};
-                    padding: 14px; border-radius: 12px; text-align: center;">
-          <div style="font-size: 1.6rem;">${p.connected ? '✅' : '⏳'}</div>
+        <div style="background: rgba(34,197,94,0.15); border: 2px solid ${p.color}; padding: 14px; border-radius: 12px; text-align: center;">
+          <div style="font-size: 1.6rem;">✅</div>
           <div style="font-weight: 800; color: ${p.color}; margin-top: 6px;">${p.name}</div>
-          <div style="font-size: 0.75rem; opacity: 0.7;">${p.connected ? 'Klaar' : 'Niet verbonden'}</div>
+          <div style="font-size: 0.75rem; opacity: 0.7;">Klaar</div>
         </div>
       `).join('');
     }
 
-    // 2. INIT REFEREE
+    /* 2. REFEREE INIT */
     function initReferee() {
       myRole = 'ref';
-      const code = prompt("Voer de 4-cijferige kamercode in die op de TV staat:");
+      const code = prompt("Voer de 4-cijferige kamercode in van de TV:");
       if (!code) return;
 
       document.getElementById('view-select').style.display = 'none';
@@ -554,50 +570,60 @@
       renderRefPlayerList();
     }
 
-    // 3. INIT SPELER
+    /* 3. PLAYER INIT */
     function initPlayerLogin() {
       const code = prompt("Voer de 4-cijferige kamercode in van de TV:");
       if (!code) return;
-      const name = prompt("Wie ben jij? Kies uit: Merijn, Cas, Niels of Melle");
-      if (!name) return;
-
-      const matched = PLAYERS.find(p => p.name.toLowerCase() === name.trim().toLowerCase());
-      if (!matched) {
-        alert("Naam niet herkend! Kies exact Merijn, Cas, Niels of Melle.");
-        return;
-      }
+      const customName = prompt("Verzin je eigen spelersnaam:");
+      if (!customName || !customName.trim()) return;
 
       myRole = 'player';
-      myPlayerId = matched.id;
+      myPlayerId = 'p_' + Math.random().toString(36).substr(2, 6);
+
       document.getElementById('view-select').style.display = 'none';
       document.getElementById('mobile-view').style.display = 'flex';
-      document.getElementById('m-player-name').innerText = matched.name;
-      document.getElementById('m-player-name').style.color = matched.color;
+      document.getElementById('m-player-name').innerText = customName.trim();
 
       peer = new Peer();
       peer.on('open', () => {
         clientConn = peer.connect('gzb-' + code);
         clientConn.on('open', () => {
-          clientConn.send({ type: 'PLAYER_JOIN', playerId: myPlayerId });
+          clientConn.send({
+            type: 'PLAYER_JOIN',
+            playerId: myPlayerId,
+            name: customName.trim()
+          });
         });
         clientConn.on('data', handlePlayerIncomingData);
       });
     }
 
     /* ========================================================
-       DATA HANDLING OP TV
+       TV LOGICA
        ======================================================== */
     function handleTVIncomingData(data, conn) {
       if (data.type === 'PLAYER_JOIN') {
-        const p = PLAYERS.find(x => x.id === data.playerId);
-        if (p) p.connected = true;
+        const assignedColor = PLAYER_COLORS[PLAYERS.length % PLAYER_COLORS.length];
+        const newP = {
+          id: data.playerId,
+          name: data.name,
+          color: assignedColor,
+          pos: 1,
+          sips: 0,
+          orderRoll: 0,
+          connected: true
+        };
+        PLAYERS.push(newP);
         renderLobbyTV();
+        renderTokens();
+        updateTVLeaderboard();
         broadcastToAll({ type: 'SYNC_PLAYERS', players: PLAYERS });
       }
       else if (data.type === 'REF_JOIN') {
         broadcastToAll({ type: 'SYNC_PLAYERS', players: PLAYERS });
       }
       else if (data.type === 'REF_START_WIEGELOOT') {
+        if (PLAYERS.length === 0) return;
         document.getElementById('tv-lobby-overlay').style.display = 'none';
         document.getElementById('tv-roll-order-overlay').style.display = 'flex';
         renderTVRollOrder();
@@ -612,14 +638,15 @@
         }
       }
       else if (data.type === 'PLAYER_DICE_ROLL') {
-        animateTVDice(data.roll);
+        animateDiceCube('tv-dice-cube', data.roll, () => {
+          document.getElementById('tv-dice-status').innerText = `Gegooid: ${data.roll}! Wachten op stappen zetten...`;
+        });
       }
       else if (data.type === 'PLAYER_EXECUTE_STEPS') {
         executePlayerSteps(data.playerId, data.steps);
       }
       else if (data.type === 'PLAYER_SUBMIT_ANSWER') {
         receivedAnswers[data.playerId] = data.ans;
-        // Stuur door naar Scheidsrechter
         broadcastToAll({ type: 'REF_RECEIVE_ANSWERS', answers: receivedAnswers });
       }
       else if (data.type === 'REF_JUDGE_RESULT') {
@@ -637,9 +664,6 @@
       });
     }
 
-    /* ========================================================
-       SPEL LOGICA & ANIMATIES OP TV
-       ======================================================== */
     function buildBoard() {
       const grid = document.getElementById('board-grid');
       grid.innerHTML = '';
@@ -668,8 +692,9 @@
         const el = document.getElementById(`tokens-tile-${p.pos}`);
         if (el) {
           const tok = document.createElement('div');
-          tok.className = `p-token ${p.class}`;
-          tok.innerText = p.name.charAt(0);
+          tok.className = 'p-token';
+          tok.style.background = p.color;
+          tok.innerText = p.name.charAt(0).toUpperCase();
           el.appendChild(tok);
         }
       });
@@ -701,24 +726,23 @@
       grid.innerHTML = PLAYERS.map(p => `
         <div style="background: rgba(255,255,255,0.06); border: 2px solid ${p.color}; padding: 16px; border-radius: 12px; text-align: center;">
           <h3 style="color:${p.color};">${p.name}</h3>
-          <div style="font-size: 3rem; font-weight: 900; margin: 10px 0; color: var(--gold);">
+          <div style="font-size: 2.8rem; font-weight: 900; margin: 10px 0; color: var(--gold);">
             ${p.orderRoll > 0 ? p.orderRoll : '...'}
           </div>
           <div style="font-size: 0.8rem; opacity: 0.7;">
-            ${p.orderRoll > 0 ? 'Gegooid' : 'Aan het gooien...'}
+            ${p.orderRoll > 0 ? 'Gegooid' : 'Aan het rollen...'}
           </div>
         </div>
       `).join('');
     }
 
     function checkAllRollOrderFinished() {
-      if (PLAYERS.every(p => p.orderRoll > 0)) {
-        // Rangschikken wie het hoogst gooit
+      if (PLAYERS.length > 0 && PLAYERS.every(p => p.orderRoll > 0)) {
         turnOrder = [...PLAYERS].sort((a, b) => b.orderRoll - a.orderRoll).map(p => p.id);
         setTimeout(() => {
           document.getElementById('tv-roll-order-overlay').style.display = 'none';
           startTurn();
-        }, 2500);
+        }, 2200);
       }
     }
 
@@ -731,35 +755,39 @@
       document.getElementById('tv-dice-turn-player').style.color = activePlayer.color;
       document.getElementById('tv-dice-status').innerText = 'Wachten op worp vanaf mobiel...';
 
+      // Reset cube
+      const cube = document.getElementById('tv-dice-cube');
+      cube.classList.remove('rolling');
+      cube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+
       broadcastToAll({
         type: 'TURN_STARTED',
         activePlayerId: activePlayer.id
       });
     }
 
-    function animateTVDice(value) {
-      const dice = document.getElementById('tv-dice');
-      document.getElementById('tv-dice-status').innerText = 'De dobbelsteen rolt...';
+    /* REALISTISCHE 3D DOBBELSTEEN ANIMATIE MET AUDIO TIKKEN */
+    function animateDiceCube(elementId, targetValue, onFinish) {
+      const cube = document.getElementById(elementId);
+      if (!cube) return;
 
-      const rotX = 720 + (Math.random() * 360);
-      const rotY = 720 + (Math.random() * 360);
-
-      dice.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      cube.classList.add('rolling');
+      
+      let rolls = 0;
+      const soundInterval = setInterval(() => {
+        playAudioBeep(220 + Math.random() * 200, 0.05);
+        rolls++;
+        if (rolls > 12) clearInterval(soundInterval);
+      }, 100);
 
       setTimeout(() => {
-        // Zet op definitieve ogen
-        const targets = {
-          1: 'rotateY(0deg)',
-          6: 'rotateY(180deg)',
-          2: 'rotateY(90deg)',
-          5: 'rotateY(-90deg)',
-          3: 'rotateX(-90deg)',
-          4: 'rotateX(90deg)'
-        };
-        dice.style.transform = targets[value];
-        document.getElementById('tv-dice-status').innerText = `Gegooid: ${value}! Wachten op stappen zetten...`;
-        playAudioBeep(600, 0.15);
-      }, 1200);
+        cube.classList.remove('rolling');
+        const rot = DICE_ROTATIONS[targetValue] || { x: 0, y: 0 };
+        // Extra ronddraai voor soepele stop
+        cube.style.transform = `rotateX(${rot.x + 720}deg) rotateY(${rot.y + 720}deg)`;
+        playAudioBeep(650, 0.2);
+        if (onFinish) onFinish();
+      }, 1400);
     }
 
     function executePlayerSteps(playerId, steps) {
@@ -777,7 +805,7 @@
         remaining--;
         renderTokens();
         updateTVLeaderboard();
-        playAudioBeep(450, 0.08);
+        playAudioBeep(420, 0.08);
       }, 350);
     }
 
@@ -788,16 +816,15 @@
         return;
       }
 
-      // Check KOPDUEL
+      // KOPDUEL
       const others = PLAYERS.filter(p => p.id !== player.id && p.pos === player.pos);
       if (others.length > 0) {
-        showSipAlert(`💥 KOPDUEL! ${player.name} & ${others[0].name} drinken beiden 2 slokken!`);
+        showSipAlert(`💥 KOPDUEL! ${player.name} & ${others[0].name} drinken 2 slokken!`);
         player.sips += 2;
         others[0].sips += 2;
         updateTVLeaderboard();
       }
 
-      // VRAAG TRIGGEREN
       currentQ = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
       receivedAnswers = {};
 
@@ -815,16 +842,14 @@
 
     function applyJudgeResult(data) {
       document.getElementById('tv-question-overlay').style.display = 'none';
-      
-      // Toon straf/beloning
       showSipAlert(data.summary);
+
       data.updatedPlayers.forEach(up => {
         const p = PLAYERS.find(x => x.id === up.id);
         if (p) p.sips = up.sips;
       });
       updateTVLeaderboard();
 
-      // Volgende beurt
       currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
       setTimeout(() => {
         startTurn();
@@ -833,14 +858,22 @@
 
     function triggerVictory(winner) {
       confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-      alert(`🏆 KAMPIOEN! ${winner.name} heeft de Kampioensschaal bereikt!`);
+      alert(`🏆 KAMPIOEN! ${winner.name} bereikt de Kampioensschaal!`);
     }
 
     /* ========================================================
-       SPELER MOBIELE LOGICA
+       MOBIELE SPELER ACTIES
        ======================================================== */
     function handlePlayerIncomingData(data) {
-      if (data.type === 'START_WIEGELOOT') {
+      if (data.type === 'SYNC_PLAYERS') {
+        const me = data.players.find(x => x.id === myPlayerId);
+        if (me) {
+          document.getElementById('m-player-name').style.color = me.color;
+          document.getElementById('m-tile-info').innerText = `Vak ${me.pos}`;
+          document.getElementById('m-sips-badge').innerText = `🍺 ${me.sips} slokken`;
+        }
+      }
+      else if (data.type === 'START_WIEGELOOT') {
         document.getElementById('m-lobby-card').style.display = 'none';
         document.getElementById('m-roll-order-card').style.display = 'block';
       }
@@ -851,6 +884,12 @@
         document.getElementById('m-turn-card').style.display = isMyTurn ? 'block' : 'none';
         document.getElementById('m-btn-roll').style.display = 'block';
         document.getElementById('m-btn-step').style.display = 'none';
+
+        const cube = document.getElementById('m-turn-dice');
+        if (cube) {
+          cube.classList.remove('rolling');
+          cube.style.transform = 'scale(0.7) rotateX(0deg) rotateY(0deg)';
+        }
       }
       else if (data.type === 'TRIGGER_QUESTION') {
         const shouldAnswer = data.question.group || data.activePlayerId === myPlayerId;
@@ -870,16 +909,22 @@
 
     function playerRollOrder() {
       const roll = Math.floor(Math.random() * 6) + 1;
-      document.getElementById('m-roll-order-result').innerText = roll;
       document.getElementById('m-btn-roll-order').style.display = 'none';
-      clientConn.send({ type: 'PLAYER_WIEGELOOT_ROLL', playerId: myPlayerId, roll: roll });
+
+      animateDiceCube('m-order-dice', roll, () => {
+        document.getElementById('m-roll-order-result').innerText = `Gegooid: ${roll}!`;
+        clientConn.send({ type: 'PLAYER_WIEGELOOT_ROLL', playerId: myPlayerId, roll: roll });
+      });
     }
 
     function playerRollDice() {
       pendingRoll = Math.floor(Math.random() * 6) + 1;
       document.getElementById('m-btn-roll').style.display = 'none';
-      document.getElementById('m-btn-step').style.display = 'block';
-      document.getElementById('m-btn-step').innerText = `🏃 Zet ${pendingRoll} Stappen!`;
+
+      animateDiceCube('m-turn-dice', pendingRoll, () => {
+        document.getElementById('m-btn-step').style.display = 'block';
+        document.getElementById('m-btn-step').innerText = `🏃 Zet ${pendingRoll} Stappen!`;
+      });
 
       clientConn.send({ type: 'PLAYER_DICE_ROLL', playerId: myPlayerId, roll: pendingRoll });
     }
@@ -897,13 +942,18 @@
     }
 
     /* ========================================================
-       SCHEIDSRECHTER LOGICA
+       SCHEIDSRECHTER ACTIES
        ======================================================== */
     function renderRefPlayerList() {
       const list = document.getElementById('ref-player-list');
+      document.getElementById('ref-player-count').innerText = `Aangemelde Spelers (${PLAYERS.length}):`;
+      if (PLAYERS.length === 0) {
+        list.innerHTML = '<div style="opacity:0.5;">Wachten op aanmeldingen...</div>';
+        return;
+      }
       list.innerHTML = PLAYERS.map(p => `
         <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; border-left: 4px solid ${p.color};">
-          <span>${p.name}</span>
+          <span style="font-weight:700;">${p.name}</span>
           <span>Vak ${p.pos} • 🍺 ${p.sips}</span>
         </div>
       `).join('');
@@ -911,10 +961,7 @@
 
     function handleRefIncomingData(data) {
       if (data.type === 'SYNC_PLAYERS') {
-        data.players.forEach(p => {
-          const matched = PLAYERS.find(x => x.id === p.id);
-          if (matched) Object.assign(matched, p);
-        });
+        PLAYERS = data.players;
         renderRefPlayerList();
       }
       else if (data.type === 'TRIGGER_QUESTION') {
@@ -932,6 +979,7 @@
       const list = document.getElementById('ref-answers-list');
       list.innerHTML = Object.keys(answers).map(pId => {
         const p = PLAYERS.find(x => x.id === pId);
+        if (!p) return '';
         return `
           <div style="background: rgba(255,255,255,0.08); padding: 10px; border-radius: 8px; border-left: 4px solid ${p.color};">
             <div style="font-weight: 800; font-size: 0.9rem;">${p.name}:</div>
@@ -945,10 +993,9 @@
       }).join('');
     }
 
-    let judgmentResults = {};
     function refMark(pId, isCorrect) {
-      judgmentResults[pId] = isCorrect;
       const p = PLAYERS.find(x => x.id === pId);
+      if (!p) return;
       if (!isCorrect) p.sips += 2;
       alert(`${p.name} gemarkeerd als ${isCorrect ? 'GOED' : 'FOUT'}`);
     }
@@ -964,12 +1011,17 @@
     }
 
     function refStartWiegeloot() {
+      if (PLAYERS.length === 0) {
+        alert("Wacht tot er ten minste 1 speler is aangemeld!");
+        return;
+      }
       document.getElementById('ref-lobby-card').style.display = 'none';
       clientConn.send({ type: 'REF_START_WIEGELOOT' });
     }
 
     function refCardPenalty(type) {
-      const pName = prompt("Aan wie geef je de kaart? (Merijn, Cas, Niels of Melle)");
+      const names = PLAYERS.map(p => p.name).join(', ');
+      const pName = prompt(`Aan wie geef je de kaart? (${names})`);
       const p = PLAYERS.find(x => x.name.toLowerCase() === pName?.trim().toLowerCase());
       if (!p) return;
 
@@ -988,7 +1040,7 @@
     }
 
     /* ========================================================
-       ALGEMEEN: FULLSCREEN, SOUND & ALERTS
+       AUDIO & HELPERS
        ======================================================== */
     function showSipAlert(msg) {
       const banner = document.getElementById('sip-alert');
