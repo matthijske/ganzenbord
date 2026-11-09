@@ -2,1189 +2,1022 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Voetbalweekend Ganzenbord - TV & Remote</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- PeerJS WebRTC -->
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- QR Code Generator -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Voetbalweekend Ganzenbord</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Inter:wght@400;600;800;900&display=swap');
-
-    body {
-      font-family: 'Inter', sans-serif;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      background-color: #030712;
+    :root {
+      --bg: #0b1e13;
+      --pitch: #1f6b3b;
+      --pitch-lines: rgba(255, 255, 255, 0.4);
+      --gold: #f59e0b;
+      --card-bg: rgba(15, 23, 42, 0.95);
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --yellow: #eab308;
+      --green: #22c55e;
+      --ref: #a855f7;
     }
-    .font-teko {
-      font-family: 'Teko', sans-serif;
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #070d09; color: #fff; min-height: 100vh; overflow-x: hidden; }
+
+    /* VIEW SELECTOR */
+    #view-select {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px; gap: 16px; text-align: center;
+    }
+    .btn {
+      padding: 16px 24px; border: none; border-radius: 12px; font-weight: 800;
+      font-size: 1.1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+      transition: transform 0.1s, filter 0.1s; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-green { background: #10b981; color: #fff; }
+    .btn-yellow { background: var(--gold); color: #000; }
+    .btn-blue { background: #2563eb; color: #fff; }
+    .btn-red { background: #dc2626; color: #fff; }
+    .btn-purple { background: var(--ref); color: #fff; }
+
+    /* FULLSCREEN BUTTON */
+    #fs-toggle {
+      position: fixed; top: 12px; right: 12px; z-index: 1000;
+      background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
     }
 
-    /* Grasmat textuur en belijning */
+    /* TV VIEW */
+    #tv-view { display: none; width: 100vw; height: 100vh; position: relative; overflow: hidden; background: #07190e; }
+    
+    /* TV PITCH */
     .pitch-container {
-      background: linear-gradient(135deg, #15803d 0%, #166534 50%, #14532d 100%);
-      background-size: 100% 100%;
-      box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.6);
+      width: 100%; height: 100%; position: relative;
+      background: radial-gradient(circle at center, #1b5e20 0%, #0d3813 100%);
+      display: flex; flex-direction: column; padding: 20px 280px 20px 20px;
     }
-    .grass-stripes {
-      background: repeating-linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.03) 0px,
-        rgba(255, 255, 255, 0.03) 60px,
-        rgba(0, 0, 0, 0.04) 60px,
-        rgba(0, 0, 0, 0.04) 120px
-      );
+    .pitch-lines {
+      position: absolute; inset: 20px 280px 20px 20px; border: 4px solid var(--pitch-lines);
+      border-radius: 16px; pointer-events: none;
     }
-
-    /* Bord cell styling */
-    .board-cell {
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    .pitch-center-circle {
+      position: absolute; top: 50%; left: calc((100% - 280px) / 2); transform: translate(-50%, -50%);
+      width: 220px; height: 220px; border: 4px solid var(--pitch-lines); border-radius: 50%;
     }
-    .board-cell.active-step {
-      transform: scale(1.12);
-      box-shadow: 0 0 25px rgba(250, 204, 21, 0.95);
-      border-color: #facc15 !important;
-      z-index: 30;
+    .pitch-midline {
+      position: absolute; top: 20px; bottom: 20px; left: calc((100% - 280px) / 2);
+      border-left: 4px solid var(--pitch-lines);
     }
 
-    /* 3D Dice styling & rolling animation */
-    .dice-3d {
-      width: 100px;
-      height: 100px;
-      transform-style: preserve-3d;
-      transition: transform 1s ease-out;
+    /* TILES GRID ON PITCH */
+    #board-grid {
+      position: absolute; inset: 30px 290px 30px 30px; display: grid;
+      grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(5, 1fr); gap: 8px;
     }
-    @keyframes rollShake {
-      0% { transform: scale(0.6) rotate(0deg) translate(0, 0); }
-      20% { transform: scale(1.2) rotate(140deg) translate(-25px, -30px); }
-      40% { transform: scale(1.3) rotate(260deg) translate(30px, -20px); }
-      60% { transform: scale(1.1) rotate(420deg) translate(-15px, 20px); }
-      80% { transform: scale(1.05) rotate(600deg) translate(10px, -10px); }
-      100% { transform: scale(1) rotate(720deg) translate(0, 0); }
+    .tile {
+      background: rgba(0, 0, 0, 0.45); border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 10px; position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: space-between; padding: 4px;
+      font-size: 0.7rem; font-weight: 700; color: #fff;
     }
-    .animate-dice-roll {
-      animation: rollShake 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    .tile-num {
+      position: absolute; top: 3px; left: 5px; font-size: 0.75rem; font-weight: 900;
+      opacity: 0.6;
+    }
+    .tile-icon { font-size: 1.3rem; margin-top: 8px; }
+    .tile-name { text-align: center; line-height: 1; font-size: 0.65rem; opacity: 0.9; }
+    .tile.special { border-color: var(--gold); background: rgba(245, 158, 11, 0.2); }
+    .tile.start { border-color: #3b82f6; background: rgba(59, 130, 246, 0.25); }
+    .tile.finish { border-color: #22c55e; background: rgba(34, 197, 94, 0.3); }
+
+    /* PLAYERS ON TILE */
+    .tile-tokens {
+      display: flex; gap: 4px; position: absolute; bottom: 4px; left: 50%;
+      transform: translateX(-50%); z-index: 10;
+    }
+    .p-token {
+      width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 900; box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .token-merijn { background: var(--red); color: #fff; }
+    .token-cas { background: var(--blue); color: #fff; }
+    .token-niels { background: var(--yellow); color: #000; }
+    .token-melle { background: var(--green); color: #fff; }
+
+    /* TV SIDEBAR - LEADERBOARD */
+    .tv-sidebar {
+      position: absolute; top: 20px; right: 20px; bottom: 20px; width: 240px;
+      background: var(--card-bg); border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px;
+      backdrop-filter: blur(10px);
+    }
+    .sidebar-title { font-size: 0.9rem; text-transform: uppercase; color: var(--gold); font-weight: 900; letter-spacing: 1px; }
+    .leaderboard-list { display: flex; flex-direction: column; gap: 10px; }
+    .lb-card {
+      background: rgba(255,255,255,0.06); padding: 10px; border-radius: 10px;
+      border-left: 6px solid #fff; display: flex; flex-direction: column; gap: 2px;
+    }
+    .lb-card.active-turn { background: rgba(245, 158, 11, 0.2); border-color: var(--gold); }
+    .lb-top { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 0.95rem; }
+    .lb-sub { font-size: 0.75rem; opacity: 0.7; }
+
+    /* TV OVERLAYS */
+    .tv-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+      z-index: 100; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 30px; text-align: center;
+    }
+    .overlay-box {
+      background: #111827; border: 3px solid rgba(255,255,255,0.2); border-radius: 20px;
+      padding: 30px; max-width: 720px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
     }
 
-    /* Pion hop animatie */
-    @keyframes tokenHop {
-      0% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-16px) scale(1.35); }
-      100% { transform: translateY(0) scale(1); }
+    /* 3D DICE ANIMATION */
+    .dice-container {
+      width: 110px; height: 110px; perspective: 600px; margin: 15px 0;
     }
-    .token-hopping {
-      animation: tokenHop 0.28s ease-in-out;
+    .dice {
+      width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+      transition: transform 1.2s cubic-bezier(0.2, 0.85, 0.4, 1.2);
+    }
+    .dice-face {
+      position: absolute; width: 110px; height: 110px; background: #fff;
+      border: 3px solid #cbd5e1; border-radius: 18px; display: grid; padding: 14px;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.15);
+    }
+    .pip { width: 18px; height: 18px; background: #0f172a; border-radius: 50%; justify-self: center; align-self: center; }
+    
+    /* Pip Grid Layouts */
+    .face-1 { transform: rotateY(0deg) translateZ(55px); display: flex; align-items: center; justify-content: center; }
+    .face-6 { transform: rotateY(180deg) translateZ(55px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    .face-2 { transform: rotateY(-90deg) translateZ(55px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .face-2 .pip:nth-child(2) { grid-column: 2; grid-row: 2; }
+    .face-5 { transform: rotateY(90deg) translateZ(55px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    .face-5 .pip:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .face-5 .pip:nth-child(2) { grid-column: 3; grid-row: 1; }
+    .face-5 .pip:nth-child(3) { grid-column: 2; grid-row: 2; }
+    .face-5 .pip:nth-child(4) { grid-column: 1; grid-row: 3; }
+    .face-5 .pip:nth-child(5) { grid-column: 3; grid-row: 3; }
+    .face-3 { transform: rotateX(90deg) translateZ(55px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    .face-3 .pip:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .face-3 .pip:nth-child(2) { grid-column: 2; grid-row: 2; }
+    .face-3 .pip:nth-child(3) { grid-column: 3; grid-row: 3; }
+    .face-4 { transform: rotateX(-90deg) translateZ(55px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+    /* MOBILE VIEWS */
+    #mobile-view { display: none; padding: 20px; max-width: 500px; margin: 0 auto; min-height: 100vh; flex-direction: column; gap: 16px; }
+    .m-header {
+      background: var(--card-bg); padding: 14px 18px; border-radius: 14px;
+      display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .m-card {
+      background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .m-input {
+      width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #334155;
+      background: #0f172a; color: #fff; font-size: 1.1rem;
+    }
+    .m-input:focus { border-color: var(--gold); outline: none; }
+
+    /* REFEREE VIEW */
+    #ref-view { display: none; padding: 20px; max-width: 600px; margin: 0 auto; min-height: 100vh; flex-direction: column; gap: 16px; }
+    .ref-answer-box {
+      background: #422006; border: 2px solid var(--gold); border-radius: 12px;
+      padding: 14px; color: #fef08a; font-weight: 700;
+    }
+
+    /* SIP POPUP NOTIFICATION */
+    .sip-banner {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: #e11d48; color: #fff; padding: 12px 24px; border-radius: 30px;
+      font-size: 1.2rem; font-weight: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      z-index: 2000; animation: bounceIn 0.4s ease; display: none;
+    }
+    @keyframes bounceIn {
+      0% { transform: translateX(-50%) scale(0.6); opacity: 0; }
+      80% { transform: translateX(-50%) scale(1.1); }
+      100% { transform: translateX(-50%) scale(1); opacity: 1; }
     }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen overflow-x-hidden">
+<body>
 
-  <!-- ========================================== -->
-  <!-- 1. INTRO / ROL KEUZE MODAL                 -->
-  <!-- ========================================== -->
-  <div id="roleSelectionScreen" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="max-w-xl w-full bg-slate-900 border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl text-center">
-      <div class="inline-flex p-4 bg-emerald-500/10 text-emerald-400 rounded-2xl mb-4 text-4xl">
-        <i class="fa-solid fa-beer-mug-empty"></i>
-      </div>
-      <h1 class="text-4xl sm:text-5xl font-teko font-bold uppercase tracking-wider text-emerald-400">Voetbalweekend Ganzenbord</h1>
-      <p class="text-slate-300 text-sm sm:text-base mt-2 mb-6">
-        Selecteer op welk apparaat je nu bent. Koppel je TV/Tablet met je telefoon als scheidsrechter remote.
-      </p>
+  <button id="fs-toggle" onclick="toggleFullscreen()">⛶ Volledig Scherm</button>
+  <div id="sip-alert" class="sip-banner">🍺 2 SLOKKEN DRINKEN!</div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Keuze TV -->
-        <button onclick="startAsTv()" class="p-5 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-800 hover:from-emerald-500 hover:to-teal-700 border border-emerald-400/40 text-left transition transform hover:-translate-y-1 shadow-lg group">
-          <div class="text-3xl mb-2 text-emerald-200 group-hover:scale-110 transition"><i class="fa-solid fa-tv"></i></div>
-          <div class="font-bold text-lg text-white">1. Tablet / TV Weergave</div>
-          <div class="text-xs text-emerald-100/80 mt-1">Cast dit tabblad via Chromecast naar de TV (Inclusief speelveld & dobbelsteen).</div>
-        </button>
-
-        <!-- Keuze Telefoon -->
-        <button onclick="startAsRemote()" class="p-5 rounded-2xl bg-gradient-to-br from-amber-600 to-orange-800 hover:from-amber-500 hover:to-orange-700 border border-amber-400/40 text-left transition transform hover:-translate-y-1 shadow-lg group">
-          <div class="text-3xl mb-2 text-amber-200 group-hover:scale-110 transition"><i class="fa-solid fa-mobile-screen-button"></i></div>
-          <div class="font-bold text-lg text-white">2. Scheidsrechter Remote</div>
-          <div class="text-xs text-amber-100/80 mt-1">Open dit op je telefoon. Zie geheime antwoorden & bedien het spel.</div>
-        </button>
-      </div>
-
-      <!-- Pincode invoerveld voor Remote koppeling -->
-      <div id="joinCodeInputWrap" class="mt-6 hidden bg-slate-800/80 p-4 rounded-2xl border border-slate-700 text-left">
-        <label class="block text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">Vul Room Pincode in van de TV:</label>
-        <div class="flex gap-2">
-          <input type="text" id="manualPinInput" placeholder="Bijv. 1234" maxlength="4" class="w-full text-center text-2xl font-mono tracking-widest uppercase bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-amber-400">
-          <button onclick="connectWithManualPin()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2 rounded-xl text-lg">Koppel</button>
-        </div>
-      </div>
-    </div>
+  <!-- 1. VIEW SELECTOR -->
+  <div id="view-select">
+    <h1 style="font-size: 2.2rem; color: var(--gold); font-weight: 900;">⚽ GANZENBORD</h1>
+    <p style="opacity: 0.8; max-width: 380px;">Kies de rol van dit apparaat om te verbinden:</p>
+    
+    <button class="btn btn-green" style="width: 100%; max-width: 320px;" onclick="initTV()">
+      📺 1. Tablet / TV Weergave
+    </button>
+    <button class="btn btn-purple" style="width: 100%; max-width: 320px;" onclick="initReferee()">
+      ⚖️ 2. De Scheidsrechter (Jij)
+    </button>
+    <button class="btn btn-blue" style="width: 100%; max-width: 320px;" onclick="initPlayerLogin()">
+      📱 3. Speler Deelnemen
+    </button>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 2. TV / TABLET SCHERM                      -->
-  <!-- ========================================== -->
-  <div id="tvScreen" class="hidden min-h-screen flex flex-col bg-slate-950">
-    <!-- Topbar TV -->
-    <header class="bg-slate-900/90 border-b border-slate-800 px-6 py-2.5 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="text-3xl text-emerald-400"><i class="fa-solid fa-trophy"></i></span>
-        <div>
-          <h2 class="text-2xl font-teko font-bold uppercase tracking-wider text-white leading-none">Voetbalweekend Ganzenbord</h2>
-          <span class="text-xs text-slate-400 font-medium">Van Kleedkamer naar Kantineschaal (45 Vakken)</span>
+  <!-- 2. TV / TABLET SCHERM -->
+  <div id="tv-view">
+    <div class="pitch-container">
+      <div class="pitch-lines"></div>
+      <div class="pitch-center-circle"></div>
+      <div class="pitch-midline"></div>
+
+      <!-- SPEELBORD TILES -->
+      <div id="board-grid"></div>
+
+      <!-- RECHTS: RANGLIJST -->
+      <div class="tv-sidebar">
+        <div class="sidebar-title">📊 Afstand tot Finish</div>
+        <div class="leaderboard-list" id="tv-leaderboard"></div>
+
+        <div style="margin-top: auto; font-size: 0.75rem; opacity: 0.5; text-align: center;">
+          Kamer Code: <span id="tv-room-code-badge" style="color:var(--gold); font-weight:900;">----</span>
         </div>
-      </div>
-
-      <!-- Status Peer / Verbinding -->
-      <div class="flex items-center gap-4">
-        <div id="tvConnectionBadge" class="flex items-center gap-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 px-3 py-1 rounded-full text-xs font-semibold">
-          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-          <span>Wachten op Scheidsrechter...</span>
-        </div>
-        <div class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl text-center">
-          <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">PIN</span>
-          <span id="tvPinDisplay" class="text-xl font-mono font-bold text-amber-400">----</span>
-        </div>
-        <!-- Fullscreen Knop -->
-        <button onclick="toggleFullscreen()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition shadow">
-          <i id="fullscreenIcon" class="fa-solid fa-expand text-emerald-400"></i>
-          <span id="fullscreenLabel" class="hidden sm:inline">Volledig Scherm</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Hoofdsectie TV: Speelveld + Zijkant -->
-    <div class="flex-1 grid grid-cols-12 gap-3 p-3 max-w-[1920px] mx-auto w-full">
-      
-      <!-- Linker / Middenkolom: HET VOETBALVELD GANZENBORD (9 kolommen) -->
-      <div class="col-span-12 lg:col-span-9 flex flex-col relative">
-        <div class="pitch-container grass-stripes flex-1 rounded-3xl border-4 border-emerald-400/40 p-3 shadow-2xl relative flex flex-col justify-between overflow-hidden min-h-[580px]">
-          
-          <!-- Voetbalveld lijnen op de achtergrond -->
-          <div class="absolute inset-4 border-2 border-white/20 rounded-2xl pointer-events-none"></div>
-          <div class="absolute top-1/2 left-4 right-4 h-0.5 bg-white/20 -translate-y-1/2 pointer-events-none"></div>
-          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-44 h-44 border-2 border-white/20 rounded-full pointer-events-none"></div>
-          <!-- Strafschopgebieden -->
-          <div class="absolute top-4 left-1/2 -translate-x-1/2 w-64 h-28 border-2 border-t-0 border-white/15 pointer-events-none"></div>
-          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-64 h-28 border-2 border-b-0 border-white/15 pointer-events-none"></div>
-
-          <!-- Bord Grid: 45 Vakjes (5 rijen x 9 kolommen) -->
-          <div id="boardGrid" class="relative z-10 grid grid-cols-9 gap-1.5 h-full auto-rows-fr">
-            <!-- Dynamisch gegenereerd -->
-          </div>
-        </div>
-
-        <!-- 3D DOBBELSTEEN OVERLAY OP HET SCHERM -->
-        <div id="tvDiceOverlay" class="hidden absolute inset-0 z-40 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none">
-          <div id="tvDiceCube" class="w-32 h-32 rounded-3xl bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 border-4 border-white shadow-[0_0_50px_rgba(245,158,11,0.8)] flex items-center justify-center text-slate-950 text-6xl font-black font-teko">
-            <span id="tvDiceNumber">?</span>
-          </div>
-          <div class="mt-4 px-6 py-2 rounded-full bg-slate-900/90 border border-amber-400 text-amber-300 font-teko text-2xl uppercase tracking-wider shadow-lg">
-            <span id="tvDicePlayerName">Merijn</span> gooit de dobbelsteen...
-          </div>
-        </div>
-      </div>
-
-      <!-- Rechterkolom: SCOREBORD & SCHEIDSRECHTER STATUS (3 kolommen) -->
-      <div class="col-span-12 lg:col-span-3 flex flex-col gap-2.5">
-        
-        <!-- De Scheidsrechter Card -->
-        <div class="bg-slate-900 border-2 border-amber-500/40 rounded-2xl p-3 shadow-xl">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
-            <div class="flex items-center gap-2">
-              <span class="text-amber-400 text-lg"><i class="fa-solid fa-whistle"></i></span>
-              <span class="font-teko text-lg font-bold uppercase tracking-wider text-amber-300">De Scheidsrechter</span>
-            </div>
-            <span class="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded">Onpartijdig</span>
-          </div>
-          <div class="flex items-center justify-between bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
-            <div>
-              <span class="text-[11px] text-slate-400 font-semibold block">Gedronken Slokken</span>
-              <span class="text-[10px] text-slate-500">Omkoping & meedrinken</span>
-            </div>
-            <div class="text-right">
-              <span id="tvRefSips" class="text-3xl font-teko font-bold text-amber-400 leading-none">0</span>
-              <span class="text-[10px] text-slate-400 ml-1">slokken</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Spelers Status Cards (Merijn, Cas, Niels, Melle) -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-xl flex-1 flex flex-col justify-between">
-          <div>
-            <div class="border-b border-slate-800 pb-2 mb-2 flex items-center justify-between">
-              <span class="font-teko text-lg font-bold uppercase tracking-wider text-slate-300">Spelers</span>
-              <span class="text-xs font-semibold text-slate-400">Beurt: <b id="tvActivePlayerName" class="text-emerald-400">Merijn</b></span>
-            </div>
-
-            <!-- 4 Spelers Lijst -->
-            <div id="tvPlayersList" class="space-y-2">
-              <!-- Dynamisch via JS -->
-            </div>
-          </div>
-
-          <!-- Koppelen Banner met QR Code -->
-          <div id="tvConnectPanel" class="mt-3 bg-slate-950/80 border border-emerald-500/30 rounded-xl p-2.5 flex items-center gap-2.5">
-            <div id="tvQrcode" class="bg-white p-1 rounded-lg shrink-0 w-14 h-14 flex items-center justify-center overflow-hidden"></div>
-            <div class="text-left">
-              <span class="text-[11px] font-bold text-emerald-400 block uppercase">Koppel Telefoon</span>
-              <span class="text-[10px] text-slate-300 block leading-tight mt-0.5">Scan de QR of voer PIN <b id="tvPinDisplay2" class="text-amber-400">----</b> in op je mobiel.</span>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
-    <!-- ==================================================== -->
-    <!-- TV MODAL: POPUP VRAAG OF OPDRACHT (ZONDER ANTWOORD!) -->
-    <!-- ==================================================== -->
-    <div id="tvCardModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-6">
-      <div id="tvModalContent" class="max-w-2xl w-full bg-slate-900 border-4 border-amber-400 rounded-3xl p-8 shadow-2xl text-center transform transition-all">
-        <div id="tvModalBadge" class="inline-block px-4 py-1.5 rounded-full font-teko text-xl tracking-wider uppercase font-bold text-slate-950 bg-amber-400 mb-4">
+    <!-- TV OVERLAY: WACHTRUIMTE / LOBBY -->
+    <div id="tv-lobby-overlay" class="tv-overlay">
+      <div class="overlay-box">
+        <h1 style="color: var(--gold); font-size: 2.2rem;">⚽ KLEEDKAMER LOBBY</h1>
+        <p style="font-size: 1.1rem; opacity: 0.8;">Ga op je eigen mobiel naar deze site en vul de kamercode in:</p>
+        <div id="tv-room-code" style="font-size: 4rem; font-weight: 900; letter-spacing: 6px; color: #fff; background: #1e293b; padding: 10px 30px; border-radius: 16px; border: 2px dashed var(--gold);">
+          ....
+        </div>
+        
+        <div style="width: 100%; margin-top: 15px;">
+          <h3 style="font-size: 1rem; text-transform: uppercase; margin-bottom: 12px; opacity: 0.7;">Verbonden Spelers (4/4):</h3>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;" id="tv-lobby-players"></div>
+        </div>
+
+        <div id="tv-lobby-msg" style="margin-top: 10px; color: var(--gold); font-weight: 700;">
+          Wachten tot de Scheidsrechter het spel start...
+        </div>
+      </div>
+    </div>
+
+    <!-- TV OVERLAY: WIEGELOOT RONDE (WIE BEGINT?) -->
+    <div id="tv-roll-order-overlay" class="tv-overlay" style="display: none;">
+      <div class="overlay-box">
+        <h2 style="color: var(--gold);">🎲 Wiegeloot-ronde</h2>
+        <p>Iedereen gooit met zijn eigen mobiel. Wie het hoogste gooit begint!</p>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; margin-top: 20px;" id="tv-roll-order-grid"></div>
+      </div>
+    </div>
+
+    <!-- TV OVERLAY: DOBBELSTEEN ACTIEVE BEURT -->
+    <div id="tv-dice-overlay" class="tv-overlay" style="display: none;">
+      <div class="overlay-box">
+        <h2 id="tv-dice-turn-player" style="font-size: 1.8rem;">Merijn is aan de beurt</h2>
+        
+        <div class="dice-container">
+          <div class="dice" id="tv-dice">
+            <div class="dice-face face-1"><div class="pip"></div></div>
+            <div class="dice-face face-6">
+              <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+              <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+            </div>
+            <div class="dice-face face-2"><div class="pip"></div><div class="pip"></div></div>
+            <div class="dice-face face-5">
+              <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+            </div>
+            <div class="dice-face face-3"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+            <div class="dice-face face-4">
+              <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tv-dice-status" style="font-size: 1.2rem; font-weight: 800; color: var(--gold);">
+          Wachten op worp vanaf mobiel...
+        </div>
+      </div>
+    </div>
+
+    <!-- TV OVERLAY: VRAAG SCHERM -->
+    <div id="tv-question-overlay" class="tv-overlay" style="display: none;">
+      <div class="overlay-box">
+        <div id="tv-q-cat" style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.1);">
           Categorie
         </div>
-        <h3 id="tvModalTitle" class="text-2xl sm:text-3xl font-bold text-white mb-4 leading-snug">
-          Vraag of Opdracht
-        </h3>
-        <p id="tvModalDesc" class="text-slate-300 text-lg mb-6 leading-relaxed">
-          Wachten op antwoord van de speler...
-        </p>
-
-        <!-- Consequentie -->
-        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex items-center justify-center gap-3 text-rose-400 font-semibold">
-          <i class="fa-solid fa-beer-mug-empty text-xl"></i>
-          <span id="tvModalConsequence">Fout = 2 slokken drinken & 1 vakje terug!</span>
+        <h2 id="tv-q-text" style="font-size: 1.7rem; font-weight: 800; line-height: 1.3;">
+          Vraagtekst komt hier...
+        </h2>
+        <div id="tv-q-status" style="font-size: 1.1rem; color: var(--gold); font-weight: 700;">
+          Spelers voeren hun antwoord in op mobiel...
         </div>
       </div>
-    </div>
-
-    <!-- TV OVERLAY: KAART / KOPDUEL ANIMATIE -->
-    <div id="tvCardOverlay" class="hidden fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-6 text-center">
-      <div id="tvOverlayCardGraphic" class="w-44 h-64 rounded-2xl shadow-2xl mb-6 flex items-center justify-center text-7xl border-4 border-white">
-        <i class="fa-solid fa-whistle"></i>
-      </div>
-      <h2 id="tvOverlayCardTitle" class="text-6xl font-teko font-bold uppercase tracking-wider text-white mb-2">GELE KAART!</h2>
-      <p id="tvOverlayCardSubtitle" class="text-2xl text-slate-300">Schwalbe of commentaar op de leiding! 2 Strafslokken!</p>
     </div>
   </div>
 
-
-  <!-- ==================================================== -->
-  <!-- 3. SCHEIDSRECHTER TELEFOON REMOTE SCHERM            -->
-  <!-- ==================================================== -->
-  <div id="remoteScreen" class="hidden min-h-screen flex flex-col bg-slate-950 max-w-md mx-auto border-x border-slate-800 pb-12">
-    <!-- Topbar Remote -->
-    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
-      <div class="flex items-center gap-2">
-        <span class="text-amber-400 text-2xl"><i class="fa-solid fa-whistle"></i></span>
-        <div>
-          <h1 class="text-xl font-teko font-bold uppercase tracking-wider text-white leading-none">Scheidsrechter Remote</h1>
-          <span class="text-[10px] text-emerald-400 font-semibold" id="remoteStatusText"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Verbonden met TV</span>
-        </div>
+  <!-- 3. MOBIELE WEERGAVE (VOOR SPELERS) -->
+  <div id="mobile-view">
+    <div class="m-header">
+      <div>
+        <div id="m-player-name" style="font-weight: 900; font-size: 1.2rem;">Speler</div>
+        <div id="m-tile-info" style="font-size: 0.8rem; opacity: 0.7;">Vak 1 (Start)</div>
       </div>
-      <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1 rounded-xl">
-        <i class="fa-solid fa-beer-mug-empty text-amber-400 text-sm"></i>
-        <span class="text-xs text-slate-400">Scheids:</span>
-        <span id="remoteRefSips" class="font-teko text-xl font-bold text-amber-400">0</span>
+      <div id="m-sips-badge" style="font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 8px;">
+        🍺 0 slokken
       </div>
-    </header>
+    </div>
 
-    <div class="p-4 space-y-4 flex-1">
+    <!-- LOBBY WACHTEN OP MOBIEL -->
+    <div id="m-lobby-card" class="m-card" style="text-align: center;">
+      <h3 style="color: var(--gold);">In de Kleedkamer</h3>
+      <p style="opacity: 0.8;">Je bent verbonden! Kijk naar de TV tot de scheidsrechter het spel start.</p>
+    </div>
+
+    <!-- WIEGELOOT ROLLEN OP MOBIEL -->
+    <div id="m-roll-order-card" class="m-card" style="display: none; text-align: center;">
+      <h3>🎲 Gooi voor Startvolgorde!</h3>
+      <p style="opacity: 0.8;">Wie het hoogste gooit begint als eerste.</p>
+      <button class="btn btn-yellow" style="width: 100%; margin-top: 10px;" id="m-btn-roll-order" onclick="playerRollOrder()">
+        Gooi Dobbelsteen!
+      </button>
+      <div id="m-roll-order-result" style="font-size: 2.5rem; font-weight: 900; margin-top: 10px; color: var(--gold);"></div>
+    </div>
+
+    <!-- MIJN BEURT OM TE ROLLEN -->
+    <div id="m-turn-card" class="m-card" style="display: none; text-align: center;">
+      <h2 style="color: var(--gold);">Jij bent aan de beurt!</h2>
+      <button class="btn btn-green" id="m-btn-roll" style="width: 100%; font-size: 1.3rem; padding: 20px;" onclick="playerRollDice()">
+        🎲 Rol de Dobbelsteen!
+      </button>
+      <button class="btn btn-yellow" id="m-btn-step" style="display: none; width: 100%; font-size: 1.3rem; padding: 20px;" onclick="playerExecuteSteps()">
+        🏃 Zet Stappen!
+      </button>
+    </div>
+
+    <!-- ANTWOORD INVOEREN OP MOBIEL -->
+    <div id="m-answer-card" class="m-card" style="display: none;">
+      <h3 id="m-q-cat" style="color: var(--gold); font-size: 0.9rem; text-transform: uppercase;">Categorie</h3>
+      <p id="m-q-text" style="font-size: 1.1rem; font-weight: 700;">Vraag komt hier...</p>
+      <input type="text" id="m-input-ans" class="m-input" placeholder="Jouw antwoord..." autocomplete="off">
+      <button class="btn btn-blue" style="width: 100%;" onclick="playerSubmitAnswer()">
+        Verstuur naar Scheidsrechter
+      </button>
+      <div id="m-ans-status" style="font-size: 0.85rem; color: #94a3b8; text-align: center;"></div>
+    </div>
+  </div>
+
+  <!-- 4. SCHEIDSRECHTER WEERGAVE (OP JOUW TELEFOON) -->
+  <div id="ref-view">
+    <div class="m-header" style="border-left: 6px solid var(--ref);">
+      <div>
+        <div style="font-weight: 900; font-size: 1.2rem; color: var(--ref);">⚖️ DE SCHEIDSRECHTER</div>
+        <div style="font-size: 0.8rem; opacity: 0.7;">Beheer alle worpen, vragen en straffen</div>
+      </div>
+      <div id="ref-sips" style="font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 8px;">
+        🍺 0 slokken
+      </div>
+    </div>
+
+    <!-- LOBBY BEDIENING -->
+    <div id="ref-lobby-card" class="m-card">
+      <h3>Spelers in Lobby:</h3>
+      <div id="ref-player-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      <button class="btn btn-green" style="width: 100%; margin-top: 10px;" onclick="refStartWiegeloot()">
+        Start Spel (Wiegeloot-ronde)
+      </button>
+    </div>
+
+    <!-- SCHEIDSRECHTER BEOORDELING VAN ANTWOORDEN -->
+    <div id="ref-judge-card" class="m-card" style="display: none;">
+      <div style="font-size: 0.8rem; color: var(--gold); text-transform: uppercase; font-weight: 800;">Actuele Vraag</div>
+      <p id="ref-q-text" style="font-weight: 700;"></p>
       
-      <!-- Huidige Speler aan zet -->
-      <div class="bg-slate-900 border-2 border-emerald-500/40 rounded-2xl p-4 shadow-lg flex items-center justify-between">
-        <div>
-          <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Aan de beurt</span>
-          <div class="flex items-center gap-2 mt-0.5">
-            <span id="remoteCurrentPlayerColor" class="w-3.5 h-3.5 rounded-full bg-red-500"></span>
-            <span id="remoteCurrentPlayerName" class="text-2xl font-teko uppercase font-bold text-white tracking-wide">Merijn</span>
-          </div>
-          <span id="remoteCurrentPlayerPos" class="text-xs text-slate-400">Vakje 1 (Kleedkamer)</span>
-        </div>
+      <div class="ref-answer-box">
+        <span style="font-size: 0.75rem; text-transform: uppercase; display: block; opacity: 0.8;">Geheim Antwoord:</span>
+        <span id="ref-q-secret-ans">...</span>
+      </div>
 
-        <!-- Dobbelen Knop -->
-        <button id="btnRollDice" onclick="remoteRollDice()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-teko text-2xl uppercase tracking-wider font-bold px-5 py-3 rounded-xl shadow-lg active:scale-95 transition flex items-center gap-2">
-          <i class="fa-solid fa-dice text-xl"></i>
-          <span>Gooi Dobbelsteen</span>
+      <h4 style="margin-top: 10px;">Binnengekomen antwoorden:</h4>
+      <div id="ref-answers-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      
+      <button class="btn btn-blue" style="width: 100%; margin-top: 10px;" onclick="refFinishRound()">
+        Volgende Beurt
+      </button>
+    </div>
+
+    <!-- EXTRA SCHEIDSRECHTERS-STRAFFEN -->
+    <div class="m-card">
+      <h4 style="color: var(--gold);">⚡ Scheidsrechter Straffen</h4>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="btn btn-yellow" style="color: #000; font-size: 0.9rem;" onclick="refCardPenalty('geel')">
+          🟨 Gele Kaart (2 slokken)
+        </button>
+        <button class="btn btn-red" style="font-size: 0.9rem;" onclick="refCardPenalty('rood')">
+          🟥 Rode Kaart (Adtje!)
         </button>
       </div>
-
-      <!-- GEHEIM SCHEIDSRECHTER KAARTEN PANEEL -->
-      <div id="remoteCardBox" class="bg-slate-900 border-2 border-amber-400 rounded-2xl p-4 shadow-xl">
-        <div class="flex items-center justify-between mb-2">
-          <span id="remoteCardCategory" class="text-xs uppercase font-bold px-2 py-0.5 rounded bg-amber-400 text-slate-950">Vraag</span>
-          <span class="text-xs text-amber-300 font-semibold"><i class="fa-solid fa-eye-slash mr-1"></i>Geheim voor TV</span>
-        </div>
-        <h4 id="remoteCardQuestion" class="text-sm font-bold text-white mb-2 leading-tight">
-          Druk op 'Gooi Dobbelsteen' om de speler te laten lopen.
-        </h4>
-        
-        <!-- HET GEHEIME ANTWOORD (ALLEEN ZICHTBAAR OP JOUW TELEFOON!) -->
-        <div id="remoteAnswerWrapper" class="bg-amber-950/40 border border-amber-500/40 rounded-xl p-3 my-3">
-          <span class="text-[10px] uppercase font-bold text-amber-400 block">Juiste Antwoord / Oplossing:</span>
-          <div id="remoteCardAnswer" class="text-sm font-bold text-amber-200 mt-0.5">Nog geen vraag actief.</div>
-        </div>
-
-        <!-- Beoordeling Knoppen -->
-        <div class="grid grid-cols-2 gap-2 mt-3">
-          <button id="btnAnswerCorrect" onclick="remoteJudgeAnswer(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-xl text-sm flex items-center justify-center gap-1.5 active:scale-95">
-            <i class="fa-solid fa-check"></i> Goed (+Beloning)
-          </button>
-          <button id="btnAnswerWrong" onclick="remoteJudgeAnswer(false)" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-3 rounded-xl text-sm flex items-center justify-center gap-1.5 active:scale-95">
-            <i class="fa-solid fa-xmark"></i> Fout (+Straf)
-          </button>
-        </div>
-      </div>
-
-      <!-- SCHEIDSRECHTER KAARTEN & INTERVENTIE -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md">
-        <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3 flex items-center justify-between">
-          <span>Scheidsrechter Interventies</span>
-          <i class="fa-solid fa-gavel text-amber-400"></i>
-        </h3>
-        <div class="grid grid-cols-3 gap-2">
-          <!-- Gele Kaart -->
-          <button onclick="remoteGiveCard('yellow')" class="bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-2 rounded-xl text-xs flex flex-col items-center justify-center gap-1 shadow active:scale-95">
-            <span class="w-3 h-4 bg-amber-200 border border-black/40 rounded-sm"></span>
-            <span>Geel (2 slokken)</span>
-          </button>
-          <!-- Rode Kaart -->
-          <button onclick="remoteGiveCard('red')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 rounded-xl text-xs flex flex-col items-center justify-center gap-1 shadow active:scale-95">
-            <span class="w-3 h-4 bg-rose-300 border border-black/40 rounded-sm"></span>
-            <span>Rood (Adtje!)</span>
-          </button>
-          <!-- VAR Check -->
-          <button onclick="remoteGiveCard('var')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl text-xs flex flex-col items-center justify-center gap-1 shadow active:scale-95">
-            <i class="fa-solid fa-tv text-sm"></i>
-            <span>VAR Check</span>
-          </button>
-        </div>
-
-        <!-- Scheidsrechter Slokkenteller Knoppen -->
-        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-          <div>
-            <span class="text-xs font-semibold text-slate-300 block">Jouw Eigen Slokken:</span>
-            <span class="text-[10px] text-slate-500">Omkoping / Meezuipen</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="remoteAddRefSip(-1)" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 font-bold hover:bg-slate-700">-</button>
-            <button onclick="remoteAddRefSip(1)" class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 text-xs">+1</button>
-            <button onclick="remoteAddRefSip(3)" class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-bold hover:bg-amber-500 text-xs">+3</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Spelers Stand & Slokken Delen -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-        <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">Spelersstand (Merijn, Cas, Niels, Melle)</h3>
-        <div id="remotePlayersList" class="space-y-2">
-          <!-- Dynamisch via JS -->
-        </div>
-      </div>
-
+      <button class="btn btn-purple" style="width: 100%; font-size: 0.9rem; margin-top: 6px;" onclick="refDrinkSelf()">
+        🍺 Scheidsrechter drinkt zelf mee (+1)
+      </button>
     </div>
   </div>
 
-
-  <!-- ========================================== -->
-  <!-- JAVASCRIPT LOGICA                          -->
-  <!-- ========================================== -->
   <script>
-    /* =========================================
-       1. SPELDATA & VAKJES CONFIGURATIE (45 VAKJES)
-       ========================================= */
-    const TOTAL_CELLS = 45;
-
-    // Type vakjes op het bord
-    const CELL_TYPES = {
-      START: { name: 'Kleedkamer', color: 'bg-emerald-700', icon: 'fa-door-open', badge: 'Start' },
-      ROEMENIE: { name: 'Roemeens Voetbal', color: 'bg-indigo-700', icon: 'fa-earth-europe', badge: '🇷🇴 Roemenië' },
-      WK: { name: 'WK Voetbal', color: 'bg-blue-600', icon: 'fa-trophy', badge: '🌍 WK' },
-      MEDIA: { name: 'Beeld & Audio', color: 'bg-fuchsia-700', icon: 'fa-volume-high', badge: '🔊 Media' },
-      ALGEHEEL: { name: 'Algemene Kennis', color: 'bg-teal-700', icon: 'fa-futbol', badge: '⚽ Sport' },
-      KELDER: { name: 'Kelderklasse', color: 'bg-amber-600', icon: 'fa-beer-mug-empty', badge: '🍺 3e Helft' },
-      SCHEIDS: { name: 'VAR & Fluit', color: 'bg-cyan-700', icon: 'fa-whistle', badge: '⚖️ Arbitrage' },
-      HERBERG: { name: 'De Rust (Herberg)', color: 'bg-orange-700', icon: 'fa-mug-hot', badge: '☕ Vak 10' },
-      PUT: { name: 'Kruisband (Put)', color: 'bg-rose-800', icon: 'fa-crutch', badge: '🩹 Vak 20' },
-      GEVANGENIS: { name: 'Schorsing (Bajes)', color: 'bg-slate-700', icon: 'fa-bars', badge: '🔒 Vak 30' },
-      DOOD: { name: 'VAR Buitenspel (Dood)', color: 'bg-red-950', icon: 'fa-skull-crossbones', badge: '💀 Vak 40' },
-      FINISH: { name: 'De Kantineschaal', color: 'bg-yellow-500', icon: 'fa-champagne-glasses', badge: '🏆 Finish' }
-    };
-
-    function getCellInfo(num) {
-      if (num === 1) return CELL_TYPES.START;
-      if (num === TOTAL_CELLS) return CELL_TYPES.FINISH;
-      if (num === 10) return CELL_TYPES.HERBERG;
-      if (num === 20) return CELL_TYPES.PUT;
-      if (num === 30) return CELL_TYPES.GEVANGENIS;
-      if (num === 40) return CELL_TYPES.DOOD;
-
-      // Categorie verdeling over de rest van de velden
-      const catOrder = [
-        CELL_TYPES.ROEMENIE,
-        CELL_TYPES.WK,
-        CELL_TYPES.MEDIA,
-        CELL_TYPES.ALGEHEEL,
-        CELL_TYPES.KELDER,
-        CELL_TYPES.SCHEIDS
-      ];
-      return catOrder[num % catOrder.length];
-    }
-
-    // Grote lijst met specifieke vragen per categorie
-    const QUESTIONS_DB = [
-      // 🇷🇴 ROEMENIË & ROEMEENS VOETBAL
-      {
-        cat: 'Roemeens Voetbal',
-        q: 'Welke Roemeense club won in 1986 de Europa Cup 1 door in de finale FC Barcelona na strafschoppen te verslaan?',
-        a: 'Steaua Boekarest (Helmut Duckadam stopte alle 4 de strafschoppen van Barcelona!)',
-        consequence: 'Fout = 2 slokken. Goed = Deel 2 slokken uit.'
-      },
-      {
-        cat: 'Roemeens Voetbal',
-        q: 'Gheorghe Hagi staat bekend als de grootste Roemeense voetballer ooit. Wat was zijn legendarische bijnaam?',
-        a: 'De Maradona van de Karpaten (of "Regele" / De Koning)',
-        consequence: 'Fout = 2 slokken & 1 vakje terug. Goed = 1 stap vooruit.'
-      },
-      {
-        cat: 'Roemeens Voetbal',
-        q: 'Welke Roemeense spits werd in 2004 bij Chelsea ontslagen nadat hij werd betrapt op het gebruik van cocaïne?',
-        a: 'Adrian Mutu',
-        consequence: 'Fout = 3 slokken (wit poeder straf). Goed = Deel een shotje uit.'
-      },
-      {
-        cat: 'Roemeens Voetbal',
-        q: 'Wie was de bondscoach van Roemenië tijdens het succesvolle WK 1994 waar ze de kwartfinale haalden?',
-        a: 'Anghel Iordănescu',
-        consequence: 'Fout = 3 slokken. Goed = Deel 3 slokken uit.'
-      },
-
-      // 🌍 WK / WERELDKAMPIOENSCHAP
-      {
-        cat: 'WK Voetbal',
-        q: 'Wie maakte de beslissende penalty in de finale van het WK 2006 voor Italië tegen Frankrijk?',
-        a: 'Fabio Grosso (nadat Zidane van het veld was gestuurd na de kopstoot tegen Materazzi)',
-        consequence: 'Fout = 2 slokken. Goed = Deel 2 slokken uit.'
-      },
-      {
-        cat: 'WK Voetbal',
-        q: 'Welke speler is aller tijden topscorer van de WK-geschiedenis met 16 doelpunten?',
-        a: 'Miroslav Klose (Duitsland)',
-        consequence: 'Fout = 2 slokken. Goed = 1 vakje extra vooruit.'
-      },
-      {
-        cat: 'WK Voetbal',
-        q: 'Tegen welk land speelde Nederland in de beruchte "Slag om Neurenberg" op het WK 2006 met 16 gele en 4 rode kaarten?',
-        a: 'Portugal (scheidsrechter Valentin Ivanov deelde de kaarten uit)',
-        consequence: 'Fout = 3 slokken. Goed = Iedereen drinkt 1 slok op Ivanov!'
-      },
-
-      // 🔊 BEELD & GELUID / COMMENTAAR
-      {
-        cat: 'Beeld & Audio',
-        q: 'Maak het legendarische citaat van Jack van Gelder af: "DENNIS BERGKAMP! DENNIS BERGKAMP! ..."',
-        a: '"... JE WORDT HELEMAAL GEK! DENNIS BERGKAMP! 2-1!"',
-        consequence: 'Niet enthousiast genoeg = Glas adten. Goed = Deel 3 slokken uit.'
-      },
-      {
-        cat: 'Beeld & Audio',
-        q: 'Zing of brul binnen 10 seconden minimaal twee volzinnen uit het clublied van jullie eigen voetbalclub of favoriete eredivisieclub!',
-        a: 'De Scheidsrechter beoordeelt de toonvastheid en overtuiging!',
-        consequence: 'Vals of gefaald = 3 slokken. Goedgekeurd = Deel 2 slokken uit.'
-      },
-      {
-        cat: 'Beeld & Audio',
-        q: 'Welk nummer schalt er door de speakers van Feyenoord na ieder doelpunt in De Kuip?',
-        a: 'I Will Survive van Hermes House Band',
-        consequence: 'Fout = 2 slokken. Goed = Deel 2 slokken uit.'
-      },
-
-      // ⚽ ALGEMENE VOETBALKENNIS
-      {
-        cat: 'Algemene Kennis',
-        q: 'Welke Nederlandse doelman kreeg in de finale van de Champions League 1995 tegen AC Milan géén tegendoelpunt?',
-        a: 'Edwin van der Sar (Ajax won met 1-0 door Patrick Kluivert)',
-        consequence: 'Fout = 2 slokken. Goed = 1 stap vooruit.'
-      },
-      {
-        cat: 'Algemene Kennis',
-        q: 'Voor welke drie traditionele Nederlandse topclubs (Ajax, PSV én Feyenoord) heeft Ronald Koeman als speler gespeeld?',
-        a: 'Alle drie: Ajax, PSV én Feyenoord!',
-        consequence: 'Fout = 2 slokken. Goed = Deel 2 slokken uit.'
-      },
-      {
-        cat: 'Algemene Kennis',
-        q: 'Hoeveel minuten duurt een reguliere verlenging in het voetbal (inclusief beide helften)?',
-        a: '30 minuten (twee helften van 15 minuten)',
-        consequence: 'Fout = 2 slokken. Goed = Deel 1 slok uit.'
-      },
-
-      // 🍺 KELDERKLASSE & DERDE HELFT
-      {
-        cat: 'Kelderklasse',
-        q: 'OPDRACHT: Noem in 10 seconden 4 typische excuses waarom een amateurvoetballer te laat komt op zondagochtend!',
-        a: 'Bijv: Wekker niet gehoord, brug open, verkeerd gereden, kater, kind ziek, voetbalschoenen vergeten.',
-        consequence: 'Niet op tijd = 3 slokken! Goed = Deel 3 slokken uit.'
-      },
-      {
-        cat: 'Kelderklasse',
-        q: 'Stemronde: Wie van de 4 spelers (Merijn, Cas, Niels of Melle) heeft de slechtste conditie in de 80e minuut?',
-        a: 'Scheids telt af 3-2-1 en iedereen wijst tegelijk. Meeste stemmen drinkt 3 slokken!',
-        consequence: 'De aangewezen verliezer trekt 3 flinke slokken.'
-      },
-      {
-        cat: 'Kelderklasse',
-        q: 'OPDRACHT: Bal balanceren! Houd een flesje of blikje 10 seconden op je hoofd stil zonder dat het valt.',
-        a: 'Scheids beoordeelt stabiliteit!',
-        consequence: 'Gevallen = Glas adten. Gehaald = Deel 4 slokken uit.'
-      },
-
-      // ⚖️ DE SCHEIDSRECHTER & VAR
-      {
-        cat: 'VAR & Fluit',
-        q: 'Mag een scheidsrechter een rode kaart geven vóórdat de wedstrijd officieel is afgetrapt?',
-        a: 'Ja! Vanaf het betreden van het speelveld/kleedkamergang mag de scheids al kaarten trekken.',
-        consequence: 'Fout = 2 slokken. Goed = Deel 2 slokken uit.'
-      },
-      {
-        cat: 'VAR & Fluit',
-        q: 'BLUF-VRAAG: Hoeveel slokken heeft de scheidsrechter tijdens dit spel al achterover geslagen?',
-        a: 'Scheids onthult zijn actuele stand! Zit de speler er maximaal 1 naast?',
-        consequence: 'Misgegokt = Zelf 3 slokken drinken. Goed geraden = Scheids drinkt er 2!'
-      }
+    /* ========================================================
+       DATA & CONSTANTEN
+       ======================================================== */
+    const PLAYERS = [
+      { id: 'p1', name: 'Merijn', color: '#ef4444', class: 'token-merijn', pos: 1, sips: 0, orderRoll: 0, connected: false },
+      { id: 'p2', name: 'Cas',    color: '#3b82f6', class: 'token-cas',    pos: 1, sips: 0, orderRoll: 0, connected: false },
+      { id: 'p3', name: 'Niels',  color: '#eab308', class: 'token-niels',  pos: 1, sips: 0, orderRoll: 0, connected: false },
+      { id: 'p4', name: 'Melle',  color: '#22c55e', class: 'token-melle',  pos: 1, sips: 0, orderRoll: 0, connected: false }
     ];
 
-    // De 4 Vaste Spelers
-    let gameState = {
-      roomId: '',
-      activePlayerIndex: 0,
-      refSips: 0,
-      activeQuestion: null,
-      players: [
-        { id: 0, name: 'Merijn', color: '#ef4444', cell: 1, sips: 0, stuckInPit: false },
-        { id: 1, name: 'Cas',    color: '#3b82f6', cell: 1, sips: 0, stuckInPit: false },
-        { id: 2, name: 'Niels',  color: '#eab308', cell: 1, sips: 0, stuckInPit: false },
-        { id: 3, name: 'Melle',  color: '#10b981', cell: 1, sips: 0, stuckInPit: false }
-      ]
-    };
+    let refSips = 0;
+    let turnOrder = ['p1', 'p2', 'p3', 'p4'];
+    let currentTurnIndex = 0;
+    let pendingRoll = 0;
+    let currentQ = null;
+    let receivedAnswers = {};
 
-    // Synthesizer Audio Effecten
-    let audioCtx = null;
-    function playBeep(freq = 440, type = 'sine', duration = 0.15) {
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch (e) {
-        console.warn('Audio interactie vereist');
+    // 45 GANZENBORD VAKJES
+    const BOARD_TILES = [];
+    const CATEGORIES = [
+      { id: 'roemenie', name: '🇷🇴 Roemeens Voetbal', icon: '🇷🇴' },
+      { id: 'wk', name: '🌍 Het WK', icon: '🌍' },
+      { id: 'audio', name: '🔊 Commentaar & Geluid', icon: '🔊' },
+      { id: 'algemeen', name: '⚽ Algemene Kennis', icon: '⚽' },
+      { id: 'kelder', name: '🍺 Kelderklasse', icon: '🍺' },
+      { id: 'var', name: '⚖️ VAR & Scheids', icon: '⚖️' }
+    ];
+
+    for (let i = 1; i <= 45; i++) {
+      let type = 'normal';
+      let icon = '⚽';
+      let name = 'Vak ' + i;
+      let cat = CATEGORIES[i % CATEGORIES.length].id;
+
+      if (i === 1) { type = 'start'; icon = '🚪'; name = 'Kleedkamer'; }
+      else if (i === 10) { type = 'special'; icon = '☕'; name = 'De Rust'; }
+      else if (i === 20) { type = 'special'; icon = '🚑'; name = 'De Put (Kruisband)'; }
+      else if (i === 30) { type = 'special'; icon = '🟥'; name = 'Schorsing (Bajes)'; }
+      else if (i === 40) { type = 'special'; icon = '💀'; name = 'VAR Buitenspel (Dood)'; }
+      else if (i === 45) { type = 'finish'; icon = '🏆'; name = 'De Kantineschaal'; }
+      else {
+        icon = CATEGORIES[i % CATEGORIES.length].icon;
+        name = CATEGORIES[i % CATEGORIES.length].name.split(' ')[1];
       }
+      BOARD_TILES.push({ num: i, type, icon, name, cat });
     }
 
-    function playHopSound() {
-      playBeep(450, 'triangle', 0.08);
-    }
+    // VRAGEN DATABASE
+    const QUESTIONS = [
+      { cat: 'roemenie', q: 'Welke Roemeense club won in 1986 de Europacup 1 door Barcelona na penalty\'s te verslaan?', a: 'Steaua Boekarest', group: true },
+      { cat: 'roemenie', q: 'Welke legendarische spelmaker stond bekend als "De Maradona van de Karpaten"?', a: 'Gheorghe Hagi', group: false },
+      { cat: 'wk', q: 'In welk land werd het allereerste WK voetbal in 1930 gehouden?', a: 'Uruguay', group: true },
+      { cat: 'wk', q: 'Wie maakte in de finale van 2014 in de verlenging het winnende doelpunt voor Duitsland tegen Argentinië?', a: 'Mario Götze', group: false },
+      { cat: 'audio', q: 'Maak het legendarische citaat van Jack van Gelder in 1998 af: "DENNIS BERGKAMP! DENNIS BERGKAMP! ..."', a: '"...BERRRGKAMP! BERRRGKAMP!" (of emotioneel geschreeuw)', group: true },
+      { cat: 'algemeen', q: 'Welke club won de Champions League drie keer op rij tussen 2016 en 2018?', a: 'Real Madrid', group: false },
+      { cat: 'kelder', q: 'Wat is de officiële straf als een speler de hoekvlag meeneemt naar de kantine na de wedstrijd?', a: 'Een rondje geven / Kist bier', group: false },
+      { cat: 'var', q: 'Mag de scheidsrechter een rode kaart geven nadat het eindsignaal al heeft geklonken?', a: 'Ja (zolang de scheidsrechter nog op het veld is)', group: false }
+    ];
 
-    function playWhistleSound() {
-      playBeep(2100, 'square', 0.22);
-      setTimeout(() => playBeep(2350, 'square', 0.45), 100);
-    }
-
-    function playFanfareSound() {
-      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-        setTimeout(() => playBeep(freq, 'square', 0.18), idx * 110);
-      });
-    }
-
-    /* =========================================
-       FULLSCREEN TOGGLE VOOR TABLET
-       ========================================= */
-    function toggleFullscreen() {
-      const elem = document.documentElement;
-      const icon = document.getElementById('fullscreenIcon');
-      const label = document.getElementById('fullscreenLabel');
-
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        if (elem.requestFullscreen) {
-          elem.requestFullscreen().catch(err => console.warn(err));
-        } else if (elem.webkitRequestFullscreen) {
-          elem.webkitRequestFullscreen();
-        }
-        if (icon) icon.className = "fa-solid fa-compress text-amber-400";
-        if (label) label.innerText = "Sluit Fullscreen";
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
-        if (icon) icon.className = "fa-solid fa-expand text-emerald-400";
-        if (label) label.innerText = "Volledig Scherm";
-      }
-    }
-
-    /* =========================================
-       2. PEERJS VERBINDING LOGICA
-       ========================================= */
+    /* ========================================================
+       PEERJS NETWERK SYNC
+       ======================================================== */
     let peer = null;
-    let peerConn = null;
-    let userRole = null;
+    let connections = []; // TV bewaart alle connecties
+    let clientConn = null; // Mobiel/Ref bewaart connectie naar TV
+    let myRole = '';
+    let myPlayerId = '';
 
-    function generate4Pin() {
+    function makeRoomCode() {
       return Math.floor(1000 + Math.random() * 9000).toString();
     }
 
-    function startAsTv() {
-      userRole = 'tv';
-      document.getElementById('roleSelectionScreen').classList.add('hidden');
-      document.getElementById('tvScreen').classList.remove('hidden');
+    // 1. INIT TV
+    function initTV() {
+      myRole = 'tv';
+      document.getElementById('view-select').style.display = 'none';
+      document.getElementById('tv-view').style.display = 'block';
+      buildBoard();
+      updateTVLeaderboard();
 
-      const pin = generate4Pin();
-      gameState.roomId = pin;
-      document.getElementById('tvPinDisplay').innerText = pin;
-      document.getElementById('tvPinDisplay2').innerText = pin;
+      const code = makeRoomCode();
+      document.getElementById('tv-room-code').innerText = code;
+      document.getElementById('tv-room-code-badge').innerText = code;
 
-      renderTvBoard();
-      updateTvScoreboard();
-
-      const peerId = 'gb-voetbal-' + pin;
-      peer = new Peer(peerId);
-
-      peer.on('open', (id) => {
-        console.log('TV Peer Open ID:', id);
-        const joinUrl = window.location.origin + window.location.pathname + '?pin=' + pin + '&role=remote';
-        new QRCode(document.getElementById("tvQrcode"), {
-          text: joinUrl,
-          width: 56,
-          height: 56,
-          colorDark: "#000000",
-          colorLight: "#ffffff"
-        });
-      });
-
+      peer = new Peer('gzb-' + code);
       peer.on('connection', (conn) => {
-        peerConn = conn;
-        setupConnectionEvents(conn);
-        document.getElementById('tvConnectionBadge').className = "flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-3 py-1 rounded-full text-xs font-semibold";
-        document.getElementById('tvConnectionBadge').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span><span>Scheidsrechter Verbonden</span>`;
-        document.getElementById('tvConnectPanel').classList.add('hidden');
-        playWhistleSound();
-        conn.send({ type: 'SYNC_STATE', state: gameState });
+        connections.push(conn);
+        conn.on('data', (data) => handleTVIncomingData(data, conn));
       });
 
-      peer.on('error', (err) => console.error('Peer error:', err));
+      renderLobbyTV();
     }
 
-    function startAsRemote() {
-      userRole = 'remote';
-      const urlParams = new URLSearchParams(window.location.search);
-      const pinParam = urlParams.get('pin');
-      
-      if (pinParam) {
-        connectToTvWithPin(pinParam);
-      } else {
-        document.getElementById('joinCodeInputWrap').classList.remove('hidden');
-      }
+    function renderLobbyTV() {
+      const container = document.getElementById('tv-lobby-players');
+      container.innerHTML = PLAYERS.map(p => `
+        <div style="background: ${p.connected ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)'};
+                    border: 2px solid ${p.connected ? p.color : 'rgba(255,255,255,0.1)'};
+                    padding: 14px; border-radius: 12px; text-align: center;">
+          <div style="font-size: 1.6rem;">${p.connected ? '✅' : '⏳'}</div>
+          <div style="font-weight: 800; color: ${p.color}; margin-top: 6px;">${p.name}</div>
+          <div style="font-size: 0.75rem; opacity: 0.7;">${p.connected ? 'Klaar' : 'Niet verbonden'}</div>
+        </div>
+      `).join('');
     }
 
-    function connectWithManualPin() {
-      const pin = document.getElementById('manualPinInput').value.trim();
-      if (pin.length !== 4) {
-        alert('Vul een geldige 4-cijferige pincode in!');
-        return;
-      }
-      connectToTvWithPin(pin);
-    }
+    // 2. INIT REFEREE
+    function initReferee() {
+      myRole = 'ref';
+      const code = prompt("Voer de 4-cijferige kamercode in die op de TV staat:");
+      if (!code) return;
 
-    function connectToTvWithPin(pin) {
-      document.getElementById('roleSelectionScreen').classList.add('hidden');
-      document.getElementById('remoteScreen').classList.remove('hidden');
-      document.getElementById('remoteStatusText').innerText = "Verbinden met code " + pin + "...";
+      document.getElementById('view-select').style.display = 'none';
+      document.getElementById('ref-view').style.display = 'flex';
 
       peer = new Peer();
       peer.on('open', () => {
-        const targetPeerId = 'gb-voetbal-' + pin;
-        peerConn = peer.connect(targetPeerId);
-        setupConnectionEvents(peerConn);
-      });
-    }
-
-    function setupConnectionEvents(conn) {
-      conn.on('open', () => {
-        if (userRole === 'remote') {
-          document.getElementById('remoteStatusText').innerHTML = `<i class="fa-solid fa-circle text-[8px] mr-1 text-emerald-400"></i>Verbonden met TV`;
-          playBeep(880, 'sine', 0.2);
-        }
-      });
-
-      conn.on('data', (data) => handleIncomingMessage(data));
-
-      conn.on('close', () => {
-        if (userRole === 'tv') {
-          document.getElementById('tvConnectionBadge').className = "flex items-center gap-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 px-3 py-1 rounded-full text-xs font-semibold";
-          document.getElementById('tvConnectionBadge').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span><span>Scheidsrechter Verbroken</span>`;
-          document.getElementById('tvConnectPanel').classList.remove('hidden');
-        } else {
-          document.getElementById('remoteStatusText').innerText = "Verbinding verbroken!";
-        }
-      });
-    }
-
-    function sendToPeer(messageObj) {
-      if (peerConn && peerConn.open) {
-        peerConn.send(messageObj);
-      }
-    }
-
-    function handleIncomingMessage(msg) {
-      if (msg.type === 'SYNC_STATE') {
-        gameState = msg.state;
-        if (userRole === 'remote') updateRemoteView();
-        if (userRole === 'tv') updateTvScoreboard();
-      }
-      else if (msg.type === 'ROLL_TRIGGER') {
-        onRollTriggerReceived(msg.dice, msg.startCell, msg.targetCell, msg.question);
-      }
-      else if (msg.type === 'JUDGE_RESULT') {
-        onJudgeResultReceived(msg.isCorrect, msg.penaltySips, msg.rewardSips);
-      }
-      else if (msg.type === 'CARD_SHOWN') {
-        showTvCardAnimation(msg.cardType);
-      }
-    }
-
-
-    /* =========================================
-       3. TV SCHERM RENDER & STAP-VOOR-STAP HOP
-       ========================================= */
-    function renderTvBoard() {
-      const grid = document.getElementById('boardGrid');
-      grid.innerHTML = '';
-
-      for (let i = 1; i <= TOTAL_CELLS; i++) {
-        const info = getCellInfo(i);
-        const cellEl = document.createElement('div');
-        cellEl.id = `cell-${i}`;
-        cellEl.className = `board-cell relative rounded-xl border border-white/20 p-1 flex flex-col justify-between overflow-hidden shadow-inner ${info.color}`;
-
-        cellEl.innerHTML = `
-          <div class="flex items-center justify-between text-[11px] font-bold text-white/90">
-            <span class="font-teko text-base leading-none tracking-tight">${i}</span>
-            <i class="fa-solid ${info.icon} text-[10px] opacity-75"></i>
-          </div>
-          <div class="text-[8px] font-black text-white/95 truncate uppercase tracking-tighter leading-none mt-0.5">
-            ${info.badge || info.name}
-          </div>
-          <!-- Pion container voor spelers -->
-          <div id="pawn-container-${i}" class="flex flex-wrap gap-1 mt-0.5 min-h-[16px] items-center justify-center"></div>
-        `;
-        grid.appendChild(cellEl);
-      }
-
-      renderPawnsOnBoard();
-    }
-
-    function renderPawnsOnBoard() {
-      for (let i = 1; i <= TOTAL_CELLS; i++) {
-        const container = document.getElementById(`pawn-container-${i}`);
-        if (container) container.innerHTML = '';
-      }
-
-      gameState.players.forEach((p, idx) => {
-        const container = document.getElementById(`pawn-container-${p.cell}`);
-        if (container) {
-          const pawn = document.createElement('div');
-          pawn.id = `pawn-player-${idx}`;
-          pawn.className = `w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[9px] font-black text-white`;
-          pawn.style.backgroundColor = p.color;
-          pawn.innerText = p.name.charAt(0);
-          container.appendChild(pawn);
-        }
-      });
-    }
-
-    function updateTvScoreboard() {
-      document.getElementById('tvRefSips').innerText = gameState.refSips;
-      const activeP = gameState.players[gameState.activePlayerIndex];
-      document.getElementById('tvActivePlayerName').innerText = activeP.name;
-      document.getElementById('tvActivePlayerName').style.color = activeP.color;
-
-      const list = document.getElementById('tvPlayersList');
-      list.innerHTML = '';
-
-      gameState.players.forEach((p, idx) => {
-        const isActive = idx === gameState.activePlayerIndex;
-        const card = document.createElement('div');
-        card.className = `p-2 rounded-xl border transition-all ${
-          isActive 
-            ? 'bg-slate-800 border-amber-400 shadow-md scale-[1.02]' 
-            : 'bg-slate-950/60 border-slate-800 opacity-90'
-        } flex items-center justify-between`;
-
-        card.innerHTML = `
-          <div class="flex items-center gap-2">
-            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white/50 shadow" style="background-color: ${p.color}">
-              ${p.name.charAt(0)}
-            </div>
-            <div>
-              <div class="font-bold text-xs text-white flex items-center gap-1">
-                <span>${p.name}</span>
-                ${isActive ? '<span class="text-[8px] px-1 bg-amber-400 text-slate-950 rounded font-bold uppercase">Aan zet</span>' : ''}
-                ${p.stuckInPit ? '<span class="text-[8px] px-1 bg-rose-600 text-white rounded font-bold uppercase">Put!</span>' : ''}
-              </div>
-              <div class="text-[10px] text-slate-400">Vak <b>${p.cell}</b>: ${getCellInfo(p.cell).name}</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <span class="text-xs font-bold text-amber-400">${p.sips}</span>
-            <span class="text-[9px] text-slate-400 block leading-none">slokken</span>
-          </div>
-        `;
-        list.appendChild(card);
-      });
-
-      renderPawnsOnBoard();
-    }
-
-    // 3D Dobbelsteen rollen + Stap voor stap springen
-    function onRollTriggerReceived(diceValue, startCell, targetCell, questionObj) {
-      const activeP = gameState.players[gameState.activePlayerIndex];
-
-      // 1. Toon Rollende Dobbelsteen op de TV
-      const overlay = document.getElementById('tvDiceOverlay');
-      const diceCube = document.getElementById('tvDiceCube');
-      const diceNumber = document.getElementById('tvDiceNumber');
-      const dicePlayerName = document.getElementById('tvDicePlayerName');
-
-      dicePlayerName.innerText = activeP.name;
-      diceNumber.innerText = "?";
-      overlay.classList.remove('hidden');
-      diceCube.classList.remove('animate-dice-roll');
-      void diceCube.offsetWidth; // trigger reflow
-      diceCube.classList.add('animate-dice-roll');
-
-      // Geluid rollen
-      let rollTicks = 0;
-      const rollInterval = setInterval(() => {
-        playBeep(200 + Math.random() * 300, 'square', 0.05);
-        diceNumber.innerText = Math.floor(Math.random() * 6) + 1;
-        rollTicks++;
-        if (rollTicks > 10) {
-          clearInterval(rollInterval);
-          diceNumber.innerText = diceValue;
-          playBeep(650, 'sine', 0.25);
-        }
-      }, 90);
-
-      // 2. Na 1.4s dobbelsteen verbergen en stap-voor-stap laten hoppen
-      setTimeout(() => {
-        overlay.classList.add('hidden');
-        animatePlayerHops(activeP, startCell, targetCell, () => {
-          // Aangekomen op eindvakje
-          checkSpecialCellLanding(activeP, targetCell, questionObj);
+        clientConn = peer.connect('gzb-' + code);
+        clientConn.on('open', () => {
+          clientConn.send({ type: 'REF_JOIN' });
         });
-      }, 1500);
+        clientConn.on('data', handleRefIncomingData);
+      });
+      renderRefPlayerList();
     }
 
-    // Stap-voor-stap animatie van pion
-    function animatePlayerHops(player, fromCell, toCell, callback) {
-      let current = fromCell;
-      const stepDirection = toCell >= fromCell ? 1 : -1;
+    // 3. INIT SPELER
+    function initPlayerLogin() {
+      const code = prompt("Voer de 4-cijferige kamercode in van de TV:");
+      if (!code) return;
+      const name = prompt("Wie ben jij? Kies uit: Merijn, Cas, Niels of Melle");
+      if (!name) return;
 
-      const hopInterval = setInterval(() => {
-        if (current === toCell) {
-          clearInterval(hopInterval);
-          callback();
+      const matched = PLAYERS.find(p => p.name.toLowerCase() === name.trim().toLowerCase());
+      if (!matched) {
+        alert("Naam niet herkend! Kies exact Merijn, Cas, Niels of Melle.");
+        return;
+      }
+
+      myRole = 'player';
+      myPlayerId = matched.id;
+      document.getElementById('view-select').style.display = 'none';
+      document.getElementById('mobile-view').style.display = 'flex';
+      document.getElementById('m-player-name').innerText = matched.name;
+      document.getElementById('m-player-name').style.color = matched.color;
+
+      peer = new Peer();
+      peer.on('open', () => {
+        clientConn = peer.connect('gzb-' + code);
+        clientConn.on('open', () => {
+          clientConn.send({ type: 'PLAYER_JOIN', playerId: myPlayerId });
+        });
+        clientConn.on('data', handlePlayerIncomingData);
+      });
+    }
+
+    /* ========================================================
+       DATA HANDLING OP TV
+       ======================================================== */
+    function handleTVIncomingData(data, conn) {
+      if (data.type === 'PLAYER_JOIN') {
+        const p = PLAYERS.find(x => x.id === data.playerId);
+        if (p) p.connected = true;
+        renderLobbyTV();
+        broadcastToAll({ type: 'SYNC_PLAYERS', players: PLAYERS });
+      }
+      else if (data.type === 'REF_JOIN') {
+        broadcastToAll({ type: 'SYNC_PLAYERS', players: PLAYERS });
+      }
+      else if (data.type === 'REF_START_WIEGELOOT') {
+        document.getElementById('tv-lobby-overlay').style.display = 'none';
+        document.getElementById('tv-roll-order-overlay').style.display = 'flex';
+        renderTVRollOrder();
+        broadcastToAll({ type: 'START_WIEGELOOT' });
+      }
+      else if (data.type === 'PLAYER_WIEGELOOT_ROLL') {
+        const p = PLAYERS.find(x => x.id === data.playerId);
+        if (p) {
+          p.orderRoll = data.roll;
+          renderTVRollOrder();
+          checkAllRollOrderFinished();
+        }
+      }
+      else if (data.type === 'PLAYER_DICE_ROLL') {
+        animateTVDice(data.roll);
+      }
+      else if (data.type === 'PLAYER_EXECUTE_STEPS') {
+        executePlayerSteps(data.playerId, data.steps);
+      }
+      else if (data.type === 'PLAYER_SUBMIT_ANSWER') {
+        receivedAnswers[data.playerId] = data.ans;
+        // Stuur door naar Scheidsrechter
+        broadcastToAll({ type: 'REF_RECEIVE_ANSWERS', answers: receivedAnswers });
+      }
+      else if (data.type === 'REF_JUDGE_RESULT') {
+        applyJudgeResult(data);
+      }
+      else if (data.type === 'REF_CARD_PENALTY') {
+        showSipAlert(data.msg);
+        broadcastToAll({ type: 'SIP_ALERT', msg: data.msg });
+      }
+    }
+
+    function broadcastToAll(msg) {
+      connections.forEach(c => {
+        if (c.open) c.send(msg);
+      });
+    }
+
+    /* ========================================================
+       SPEL LOGICA & ANIMATIES OP TV
+       ======================================================== */
+    function buildBoard() {
+      const grid = document.getElementById('board-grid');
+      grid.innerHTML = '';
+      BOARD_TILES.forEach(tile => {
+        const div = document.createElement('div');
+        div.className = `tile ${tile.type}`;
+        div.id = `tile-${tile.num}`;
+        div.innerHTML = `
+          <span class="tile-num">${tile.num}</span>
+          <div class="tile-icon">${tile.icon}</div>
+          <div class="tile-name">${tile.name}</div>
+          <div class="tile-tokens" id="tokens-tile-${tile.num}"></div>
+        `;
+        grid.appendChild(div);
+      });
+      renderTokens();
+    }
+
+    function renderTokens() {
+      BOARD_TILES.forEach(t => {
+        const el = document.getElementById(`tokens-tile-${t.num}`);
+        if (el) el.innerHTML = '';
+      });
+
+      PLAYERS.forEach(p => {
+        const el = document.getElementById(`tokens-tile-${p.pos}`);
+        if (el) {
+          const tok = document.createElement('div');
+          tok.className = `p-token ${p.class}`;
+          tok.innerText = p.name.charAt(0);
+          el.appendChild(tok);
+        }
+      });
+    }
+
+    function updateTVLeaderboard() {
+      const sorted = [...PLAYERS].sort((a, b) => b.pos - a.pos);
+      const activePlayerId = turnOrder[currentTurnIndex];
+
+      document.getElementById('tv-leaderboard').innerHTML = sorted.map((p, idx) => {
+        const dist = 45 - p.pos;
+        const isActive = p.id === activePlayerId;
+        return `
+          <div class="lb-card ${isActive ? 'active-turn' : ''}" style="border-color: ${p.color};">
+            <div class="lb-top">
+              <span style="color: ${p.color};">${idx + 1}. ${p.name}</span>
+              <span style="font-size: 0.8rem; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 6px;">
+                ${dist === 0 ? '🏆 FINISH' : 'Nog ' + dist}
+              </span>
+            </div>
+            <div class="lb-sub">Vak ${p.pos} • 🍺 ${p.sips} slokken</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTVRollOrder() {
+      const grid = document.getElementById('tv-roll-order-grid');
+      grid.innerHTML = PLAYERS.map(p => `
+        <div style="background: rgba(255,255,255,0.06); border: 2px solid ${p.color}; padding: 16px; border-radius: 12px; text-align: center;">
+          <h3 style="color:${p.color};">${p.name}</h3>
+          <div style="font-size: 3rem; font-weight: 900; margin: 10px 0; color: var(--gold);">
+            ${p.orderRoll > 0 ? p.orderRoll : '...'}
+          </div>
+          <div style="font-size: 0.8rem; opacity: 0.7;">
+            ${p.orderRoll > 0 ? 'Gegooid' : 'Aan het gooien...'}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function checkAllRollOrderFinished() {
+      if (PLAYERS.every(p => p.orderRoll > 0)) {
+        // Rangschikken wie het hoogst gooit
+        turnOrder = [...PLAYERS].sort((a, b) => b.orderRoll - a.orderRoll).map(p => p.id);
+        setTimeout(() => {
+          document.getElementById('tv-roll-order-overlay').style.display = 'none';
+          startTurn();
+        }, 2500);
+      }
+    }
+
+    function startTurn() {
+      const activePlayer = PLAYERS.find(p => p.id === turnOrder[currentTurnIndex]);
+      updateTVLeaderboard();
+
+      document.getElementById('tv-dice-overlay').style.display = 'flex';
+      document.getElementById('tv-dice-turn-player').innerText = `${activePlayer.name} is aan de beurt!`;
+      document.getElementById('tv-dice-turn-player').style.color = activePlayer.color;
+      document.getElementById('tv-dice-status').innerText = 'Wachten op worp vanaf mobiel...';
+
+      broadcastToAll({
+        type: 'TURN_STARTED',
+        activePlayerId: activePlayer.id
+      });
+    }
+
+    function animateTVDice(value) {
+      const dice = document.getElementById('tv-dice');
+      document.getElementById('tv-dice-status').innerText = 'De dobbelsteen rolt...';
+
+      const rotX = 720 + (Math.random() * 360);
+      const rotY = 720 + (Math.random() * 360);
+
+      dice.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+
+      setTimeout(() => {
+        // Zet op definitieve ogen
+        const targets = {
+          1: 'rotateY(0deg)',
+          6: 'rotateY(180deg)',
+          2: 'rotateY(90deg)',
+          5: 'rotateY(-90deg)',
+          3: 'rotateX(-90deg)',
+          4: 'rotateX(90deg)'
+        };
+        dice.style.transform = targets[value];
+        document.getElementById('tv-dice-status').innerText = `Gegooid: ${value}! Wachten op stappen zetten...`;
+        playAudioBeep(600, 0.15);
+      }, 1200);
+    }
+
+    function executePlayerSteps(playerId, steps) {
+      document.getElementById('tv-dice-overlay').style.display = 'none';
+      const player = PLAYERS.find(p => p.id === playerId);
+      let remaining = steps;
+
+      const stepInterval = setInterval(() => {
+        if (remaining <= 0 || player.pos >= 45) {
+          clearInterval(stepInterval);
+          checkTileLanded(player);
           return;
         }
-
-        current += stepDirection;
-        player.cell = current;
-        playHopSound();
-        renderPawnsOnBoard();
-
-        // Highlight tijdelijk vakje
-        document.querySelectorAll('.board-cell').forEach(c => c.classList.remove('active-step'));
-        const activeCellEl = document.getElementById(`cell-${current}`);
-        if (activeCellEl) activeCellEl.classList.add('active-step');
-
-      }, 260); // 260ms per vakje
+        player.pos++;
+        remaining--;
+        renderTokens();
+        updateTVLeaderboard();
+        playAudioBeep(450, 0.08);
+      }, 350);
     }
 
-    // Controleer speciale ganzenbord vakjes (Herberg, Put, Schorsing, Dood, Kopduel)
-    function checkSpecialCellLanding(player, cellNum, questionObj) {
-      updateTvScoreboard();
-
-      // Check of er al een andere speler op dit vak staat -> KOPDUEL!
-      const collisionPlayer = gameState.players.find(p => p.id !== player.id && p.cell === cellNum);
-      if (collisionPlayer && cellNum > 1 && cellNum < TOTAL_CELLS) {
-        showCollisionAlert(player, collisionPlayer);
+    function checkTileLanded(player) {
+      if (player.pos >= 45) {
+        player.pos = 45;
+        triggerVictory(player);
         return;
       }
 
-      // Vak 10: De Herberg / Eerste helft thee (Beurt overslaan of 3 slokken)
-      if (cellNum === 10) {
-        showSpecialEventModal(
-          "☕ DE RUST & SLAPPE THEE (Vak 10)",
-          `${player.name} blijft hangen in de kleedkamer! Neem 3 slokken warme thee/bier of sla je volgende beurt over!`,
-          "3 Slokken drinken of volgende beurt overslaan!"
-        );
-        return;
+      // Check KOPDUEL
+      const others = PLAYERS.filter(p => p.id !== player.id && p.pos === player.pos);
+      if (others.length > 0) {
+        showSipAlert(`💥 KOPDUEL! ${player.name} & ${others[0].name} drinken beiden 2 slokken!`);
+        player.sips += 2;
+        others[0].sips += 2;
+        updateTVLeaderboard();
       }
 
-      // Vak 20: De Put / Kruisbandblessure (Vast tot iemand je bevrijdt)
-      if (cellNum === 20) {
-        player.stuckInPit = true;
-        showSpecialEventModal(
-          "🩹 KRUISBANDBLESSURE (Vak 20: De Put)",
-          `Rampzalig nieuws voor ${player.name}! Hij ligt in de lappenmand en mag pas verder als een ander team op of voorbij vak 20 komt (of trek nu direct een adtje om de blessure te verdoven).`,
-          "Vast in de put! (Of trek direct een adtje)"
-        );
-        return;
-      }
+      // VRAAG TRIGGEREN
+      currentQ = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+      receivedAnswers = {};
 
-      // Vak 30: De Gevangenis / Schorsing na natrappen
-      if (cellNum === 30) {
-        showSpecialEventModal(
-          "🔒 SCHORSING NA NATRAPPEN (Vak 30: De Bajes)",
-          `De KNVB tuchtcommissie straft ${player.name}! 5 vakken terug naar vak 25 én 4 strafslokken!`,
-          "5 vakken terug + 4 strafslokken!"
-        );
-        setTimeout(() => {
-          player.cell = 25;
-          player.sips += 4;
-          updateTvScoreboard();
-        }, 2500);
-        return;
-      }
+      document.getElementById('tv-question-overlay').style.display = 'flex';
+      document.getElementById('tv-q-cat').innerText = currentQ.cat.toUpperCase();
+      document.getElementById('tv-q-text').innerText = currentQ.q;
+      document.getElementById('tv-q-status').innerText = currentQ.group ? 'Groepsvraag: Iedereen antwoordt op mobiel!' : `${player.name} voert antwoord in op mobiel...`;
 
-      // Vak 40: De Dood / 90e minuut VAR Buitenspel goal afgekeurd
-      if (cellNum === 40) {
-        showSpecialEventModal(
-          "💀 90e MINUUT VAR GOAL AFGEKEURD! (De Dood)",
-          `TREURSPEL! Doelpunt afgekeurd wegens 1 millimeter buitenspel! ${player.name} vliegt helemaal terug naar vak 15 én trekt een shotje!`,
-          "Terug naar vak 15 + shotje drinken!"
-        );
-        setTimeout(() => {
-          player.cell = 15;
-          player.sips += 3;
-          updateTvScoreboard();
-        }, 2800);
-        return;
-      }
-
-      // Finish bereikt!
-      if (cellNum === TOTAL_CELLS) {
-        playFanfareSound();
-        showSpecialEventModal(
-          "🏆 KAMPIOENEN! KANTINESCHAAL BINNEN!",
-          `${player.name} wint het Voetbalweekend Ganzenbord! De overige drie spelers (en de scheids) trekken een adtje ter ere van de kampioen!`,
-          "KAMPIOEN! De verliezers adten!"
-        );
-        return;
-      }
-
-      // Reguliere vraag tonen
-      if (questionObj) {
-        gameState.activeQuestion = questionObj;
-        document.getElementById('tvModalBadge').innerText = questionObj.cat;
-        document.getElementById('tvModalTitle').innerText = questionObj.q;
-        document.getElementById('tvModalDesc').innerText = `${player.name} is aan het woord!`;
-        document.getElementById('tvModalConsequence').innerText = questionObj.consequence;
-        document.getElementById('tvCardModal').classList.remove('hidden');
-      }
+      broadcastToAll({
+        type: 'TRIGGER_QUESTION',
+        question: currentQ,
+        activePlayerId: player.id
+      });
     }
 
-    function showSpecialEventModal(title, text, cons) {
-      playWhistleSound();
-      document.getElementById('tvModalBadge').innerText = "Speciaal Ganzenbord Evenement";
-      document.getElementById('tvModalTitle').innerText = title;
-      document.getElementById('tvModalDesc').innerText = text;
-      document.getElementById('tvModalConsequence').innerText = cons;
-      document.getElementById('tvCardModal').classList.remove('hidden');
+    function applyJudgeResult(data) {
+      document.getElementById('tv-question-overlay').style.display = 'none';
+      
+      // Toon straf/beloning
+      showSipAlert(data.summary);
+      data.updatedPlayers.forEach(up => {
+        const p = PLAYERS.find(x => x.id === up.id);
+        if (p) p.sips = up.sips;
+      });
+      updateTVLeaderboard();
 
+      // Volgende beurt
+      currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
       setTimeout(() => {
-        document.getElementById('tvCardModal').classList.add('hidden');
-        gameState.activePlayerIndex = (gameState.activePlayerIndex + 1) % gameState.players.length;
-        updateTvScoreboard();
-      }, 4500);
+        startTurn();
+      }, 2000);
     }
 
-    function showCollisionAlert(p1, p2) {
-      playWhistleSound();
-      document.getElementById('tvModalBadge').innerText = "💥 KOPDUEL! BOTSING OP HET VAKJE!";
-      document.getElementById('tvModalTitle').innerText = `${p1.name} beukt tegen ${p2.name}!`;
-      document.getElementById('tvModalDesc').innerText = `Twee hanen op hetzelfde vakje! Snelle shoot-out: Scheidsrechter telt af en stelt een benaderingsvraag. De verliezer vliegt 2 vakjes terug en drinkt 3 slokken!`;
-      document.getElementById('tvModalConsequence').innerText = "Verliezer kopduel = 2 vakjes terug + 3 slokken!";
-      document.getElementById('tvCardModal').classList.remove('hidden');
-
-      setTimeout(() => {
-        document.getElementById('tvCardModal').classList.add('hidden');
-        p1.cell = Math.max(1, p1.cell - 2);
-        p1.sips += 3;
-        gameState.activePlayerIndex = (gameState.activePlayerIndex + 1) % gameState.players.length;
-        updateTvScoreboard();
-      }, 5000);
+    function triggerVictory(winner) {
+      confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+      alert(`🏆 KAMPIOEN! ${winner.name} heeft de Kampioensschaal bereikt!`);
     }
 
-    function onJudgeResultReceived(isCorrect, penaltySips, rewardSips) {
-      document.getElementById('tvCardModal').classList.add('hidden');
-      const activeP = gameState.players[gameState.activePlayerIndex];
-
-      if (isCorrect) {
-        playFanfareSound();
-      } else {
-        playWhistleSound();
-        activeP.sips += penaltySips;
+    /* ========================================================
+       SPELER MOBIELE LOGICA
+       ======================================================== */
+    function handlePlayerIncomingData(data) {
+      if (data.type === 'START_WIEGELOOT') {
+        document.getElementById('m-lobby-card').style.display = 'none';
+        document.getElementById('m-roll-order-card').style.display = 'block';
       }
-
-      // Volgende speler aan beurt
-      gameState.activePlayerIndex = (gameState.activePlayerIndex + 1) % gameState.players.length;
-      updateTvScoreboard();
-    }
-
-    function showTvCardAnimation(type) {
-      playWhistleSound();
-      const overlay = document.getElementById('tvCardOverlay');
-      const graphic = document.getElementById('tvOverlayCardGraphic');
-      const title = document.getElementById('tvOverlayCardTitle');
-      const subtitle = document.getElementById('tvOverlayCardSubtitle');
-
-      if (type === 'yellow') {
-        graphic.className = "w-44 h-64 rounded-2xl shadow-2xl mb-6 bg-yellow-400 text-slate-950 flex items-center justify-center text-7xl border-4 border-white";
-        graphic.innerHTML = '<i class="fa-solid fa-whistle"></i>';
-        title.innerText = "GELE KAART!";
-        subtitle.innerText = "Schwalbe of commentaar op de arbitrage! 2 Strafslokken!";
-      } else if (type === 'red') {
-        graphic.className = "w-44 h-64 rounded-2xl shadow-2xl mb-6 bg-rose-600 text-white flex items-center justify-center text-7xl border-4 border-white";
-        graphic.innerHTML = '<i class="fa-solid fa-ban"></i>';
-        title.innerText = "RODE KAART!";
-        subtitle.innerText = "Direct van het veld getrapt! Trek een vol glas adtje!";
-      } else {
-        graphic.className = "w-44 h-64 rounded-2xl shadow-2xl mb-6 bg-blue-600 text-white flex items-center justify-center text-7xl border-4 border-white";
-        graphic.innerHTML = '<i class="fa-solid fa-tv"></i>';
-        title.innerText = "VAR INTERVENTIE!";
-        subtitle.innerText = "De scheidsrechter loopt naar het scherm! Iedereen stil!";
+      else if (data.type === 'TURN_STARTED') {
+        const isMyTurn = data.activePlayerId === myPlayerId;
+        document.getElementById('m-roll-order-card').style.display = 'none';
+        document.getElementById('m-answer-card').style.display = 'none';
+        document.getElementById('m-turn-card').style.display = isMyTurn ? 'block' : 'none';
+        document.getElementById('m-btn-roll').style.display = 'block';
+        document.getElementById('m-btn-step').style.display = 'none';
       }
-
-      overlay.classList.remove('hidden');
-      setTimeout(() => overlay.classList.add('hidden'), 3500);
+      else if (data.type === 'TRIGGER_QUESTION') {
+        const shouldAnswer = data.question.group || data.activePlayerId === myPlayerId;
+        if (shouldAnswer) {
+          document.getElementById('m-turn-card').style.display = 'none';
+          document.getElementById('m-answer-card').style.display = 'block';
+          document.getElementById('m-q-cat').innerText = data.question.cat.toUpperCase();
+          document.getElementById('m-q-text').innerText = data.question.q;
+          document.getElementById('m-input-ans').value = '';
+          document.getElementById('m-ans-status').innerText = '';
+        }
+      }
+      else if (data.type === 'SIP_ALERT') {
+        showSipAlert(data.msg);
+      }
     }
 
+    function playerRollOrder() {
+      const roll = Math.floor(Math.random() * 6) + 1;
+      document.getElementById('m-roll-order-result').innerText = roll;
+      document.getElementById('m-btn-roll-order').style.display = 'none';
+      clientConn.send({ type: 'PLAYER_WIEGELOOT_ROLL', playerId: myPlayerId, roll: roll });
+    }
 
-    /* =========================================
-       4. REMOTE BEDIENING LOGICA (TELEFOON)
-       ========================================= */
-    function updateRemoteView() {
-      const activeP = gameState.players[gameState.activePlayerIndex];
-      document.getElementById('remoteCurrentPlayerName').innerText = activeP.name;
-      document.getElementById('remoteCurrentPlayerColor').style.backgroundColor = activeP.color;
-      document.getElementById('remoteCurrentPlayerPos').innerText = `Vakje ${activeP.cell} (${getCellInfo(activeP.cell).name})`;
-      document.getElementById('remoteRefSips').innerText = gameState.refSips;
+    function playerRollDice() {
+      pendingRoll = Math.floor(Math.random() * 6) + 1;
+      document.getElementById('m-btn-roll').style.display = 'none';
+      document.getElementById('m-btn-step').style.display = 'block';
+      document.getElementById('m-btn-step').innerText = `🏃 Zet ${pendingRoll} Stappen!`;
 
-      const list = document.getElementById('remotePlayersList');
-      list.innerHTML = '';
-      gameState.players.forEach((p, idx) => {
-        const item = document.createElement('div');
-        item.className = "flex items-center justify-between bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 text-xs";
-        item.innerHTML = `
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full" style="background-color: ${p.color}"></span>
-            <span class="font-bold text-white">${p.name} (Vak ${p.cell})</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-amber-400 font-bold">${p.sips} slokken</span>
-            <button onclick="remoteAddPlayerSip(${idx}, 1)" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-white font-bold">+1</button>
+      clientConn.send({ type: 'PLAYER_DICE_ROLL', playerId: myPlayerId, roll: pendingRoll });
+    }
+
+    function playerExecuteSteps() {
+      document.getElementById('m-turn-card').style.display = 'none';
+      clientConn.send({ type: 'PLAYER_EXECUTE_STEPS', playerId: myPlayerId, steps: pendingRoll });
+    }
+
+    function playerSubmitAnswer() {
+      const ans = document.getElementById('m-input-ans').value.trim();
+      if (!ans) return;
+      document.getElementById('m-ans-status').innerText = '✅ Verstuurd naar Scheidsrechter!';
+      clientConn.send({ type: 'PLAYER_SUBMIT_ANSWER', playerId: myPlayerId, ans: ans });
+    }
+
+    /* ========================================================
+       SCHEIDSRECHTER LOGICA
+       ======================================================== */
+    function renderRefPlayerList() {
+      const list = document.getElementById('ref-player-list');
+      list.innerHTML = PLAYERS.map(p => `
+        <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; border-left: 4px solid ${p.color};">
+          <span>${p.name}</span>
+          <span>Vak ${p.pos} • 🍺 ${p.sips}</span>
+        </div>
+      `).join('');
+    }
+
+    function handleRefIncomingData(data) {
+      if (data.type === 'SYNC_PLAYERS') {
+        data.players.forEach(p => {
+          const matched = PLAYERS.find(x => x.id === p.id);
+          if (matched) Object.assign(matched, p);
+        });
+        renderRefPlayerList();
+      }
+      else if (data.type === 'TRIGGER_QUESTION') {
+        document.getElementById('ref-judge-card').style.display = 'block';
+        document.getElementById('ref-q-text').innerText = data.question.q;
+        document.getElementById('ref-q-secret-ans').innerText = data.question.a;
+        document.getElementById('ref-answers-list').innerHTML = '<div style="opacity:0.6;">Wachten op antwoorden...</div>';
+      }
+      else if (data.type === 'REF_RECEIVE_ANSWERS') {
+        renderRefAnswers(data.answers);
+      }
+    }
+
+    function renderRefAnswers(answers) {
+      const list = document.getElementById('ref-answers-list');
+      list.innerHTML = Object.keys(answers).map(pId => {
+        const p = PLAYERS.find(x => x.id === pId);
+        return `
+          <div style="background: rgba(255,255,255,0.08); padding: 10px; border-radius: 8px; border-left: 4px solid ${p.color};">
+            <div style="font-weight: 800; font-size: 0.9rem;">${p.name}:</div>
+            <div style="font-size: 1.1rem; color: #fff; margin: 4px 0;">"${answers[pId]}"</div>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <button class="btn btn-green" style="padding: 6px 14px; font-size: 0.8rem;" onclick="refMark('${pId}', true)">✅ Goed (+ Deel 2 slokken uit)</button>
+              <button class="btn btn-red" style="padding: 6px 14px; font-size: 0.8rem;" onclick="refMark('${pId}', false)">❌ Fout (Drink 2 slokken)</button>
+            </div>
           </div>
         `;
-        list.appendChild(item);
-      });
+      }).join('');
     }
 
-    function remoteRollDice() {
-      const activeP = gameState.players[gameState.activePlayerIndex];
-      const dice = Math.floor(Math.random() * 6) + 1;
-      const startCell = activeP.cell;
-      let targetCell = startCell + dice;
+    let judgmentResults = {};
+    function refMark(pId, isCorrect) {
+      judgmentResults[pId] = isCorrect;
+      const p = PLAYERS.find(x => x.id === pId);
+      if (!isCorrect) p.sips += 2;
+      alert(`${p.name} gemarkeerd als ${isCorrect ? 'GOED' : 'FOUT'}`);
+    }
 
-      // Ganzenbord finish regel: exact uitgooien
-      if (targetCell > TOTAL_CELLS) {
-        const excess = targetCell - TOTAL_CELLS;
-        targetCell = TOTAL_CELLS - excess;
+    function refFinishRound() {
+      document.getElementById('ref-judge-card').style.display = 'none';
+      clientConn.send({
+        type: 'REF_JUDGE_RESULT',
+        summary: 'Scheidsrechter heeft de antwoorden gekeurd!',
+        updatedPlayers: PLAYERS
+      });
+      renderRefPlayerList();
+    }
+
+    function refStartWiegeloot() {
+      document.getElementById('ref-lobby-card').style.display = 'none';
+      clientConn.send({ type: 'REF_START_WIEGELOOT' });
+    }
+
+    function refCardPenalty(type) {
+      const pName = prompt("Aan wie geef je de kaart? (Merijn, Cas, Niels of Melle)");
+      const p = PLAYERS.find(x => x.name.toLowerCase() === pName?.trim().toLowerCase());
+      if (!p) return;
+
+      const sips = type === 'geel' ? 2 : 5;
+      p.sips += sips;
+      const msg = type === 'geel' ? `🟨 GELE KAART voor ${p.name}! (2 slokken)` : `🟥 RODE KAART voor ${p.name}! (Adtje!)`;
+      
+      clientConn.send({ type: 'REF_CARD_PENALTY', msg: msg });
+      renderRefPlayerList();
+    }
+
+    function refDrinkSelf() {
+      refSips++;
+      document.getElementById('ref-sips').innerText = `🍺 ${refSips} slokken`;
+      showSipAlert(`Scheidsrechter neemt zelf een slok! 🍺 (Totaal: ${refSips})`);
+    }
+
+    /* ========================================================
+       ALGEMEEN: FULLSCREEN, SOUND & ALERTS
+       ======================================================== */
+    function showSipAlert(msg) {
+      const banner = document.getElementById('sip-alert');
+      banner.innerText = msg;
+      banner.style.display = 'block';
+      setTimeout(() => { banner.style.display = 'none'; }, 4000);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
       }
-
-      // Filter vraag die past bij categorie of random
-      const cellInfo = getCellInfo(targetCell);
-      let matchingQuestions = QUESTIONS_DB.filter(q => q.cat.toLowerCase().includes(cellInfo.name.toLowerCase()));
-      if (matchingQuestions.length === 0) matchingQuestions = QUESTIONS_DB;
-      const question = matchingQuestions[Math.floor(Math.random() * matchingQuestions.length)];
-
-      // Geheime vraag + antwoord alleen op telefoon tonen
-      document.getElementById('remoteCardCategory').innerText = `${question.cat} (Gooi: ${dice})`;
-      document.getElementById('remoteCardQuestion').innerText = question.q;
-      document.getElementById('remoteCardAnswer').innerText = question.a;
-
-      // Verstuur naar TV scherm
-      sendToPeer({
-        type: 'ROLL_TRIGGER',
-        dice: dice,
-        startCell: startCell,
-        targetCell: targetCell,
-        question: question
-      });
     }
 
-    function remoteJudgeAnswer(isCorrect) {
-      sendToPeer({
-        type: 'JUDGE_RESULT',
-        isCorrect: isCorrect,
-        penaltySips: 2,
-        rewardSips: 2
-      });
-
-      document.getElementById('remoteCardQuestion').innerText = "Vraag beoordeeld! Druk op 'Gooi Dobbelsteen' voor de volgende speler.";
-      document.getElementById('remoteCardAnswer').innerText = "Wachten op volgende beurt...";
+    function playAudioBeep(freq, duration) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
     }
-
-    function remoteGiveCard(color) {
-      sendToPeer({
-        type: 'CARD_SHOWN',
-        cardType: color
-      });
-    }
-
-    function remoteAddRefSip(amount) {
-      gameState.refSips = Math.max(0, gameState.refSips + amount);
-      document.getElementById('remoteRefSips').innerText = gameState.refSips;
-      sendToPeer({ type: 'SYNC_STATE', state: gameState });
-    }
-
-    function remoteAddPlayerSip(playerIndex, amount) {
-      gameState.players[playerIndex].sips += amount;
-      updateRemoteView();
-      sendToPeer({ type: 'SYNC_STATE', state: gameState });
-    }
-
-    // Auto-connect als pin in URL staat
-    window.addEventListener('load', () => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('role') === 'remote' && params.get('pin')) {
-        document.getElementById('manualPinInput').value = params.get('pin');
-        connectToTvWithPin(params.get('pin'));
-      }
-    });
   </script>
 </body>
 </html>
