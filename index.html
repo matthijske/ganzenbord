@@ -6,212 +6,84 @@
   <title>Voetbalweekend Ganzenbord</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-  <style>
-    :root {
-      --bg: #070d09;
-      --gold: #f59e0b;
-      --card-bg: rgba(15, 23, 42, 0.95);
-      --pitch-lines: rgba(255, 255, 255, 0.4);
-      --ref: #a855f7;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: #fff; min-height: 100vh; overflow-x: hidden; }
-
-    /* VIEW SELECTOR */
-    #view-select {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 24px; gap: 16px; text-align: center;
-    }
-    .btn {
-      padding: 16px 24px; border: none; border-radius: 12px; font-weight: 800;
-      font-size: 1.1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
-      transition: transform 0.1s, filter 0.1s; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-    }
-    .btn:active { transform: scale(0.97); }
-    .btn-green { background: #10b981; color: #fff; }
-    .btn-yellow { background: var(--gold); color: #000; }
-    .btn-blue { background: #2563eb; color: #fff; }
-    .btn-red { background: #dc2626; color: #fff; }
-    .btn-purple { background: var(--ref); color: #fff; }
-
-    #fs-toggle {
-      position: fixed; top: 12px; right: 12px; z-index: 1000;
-      background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
-    }
-
-    /* TV PITCH WEERGAVE */
-    #tv-view { display: none; width: 100vw; height: 100vh; position: relative; overflow: hidden; background: #07190e; }
-    .pitch-container {
-      width: 100%; height: 100%; position: relative;
-      background: radial-gradient(circle at center, #1b5e20 0%, #0d3813 100%);
-      display: flex; flex-direction: column; padding: 20px 280px 20px 20px;
-    }
-    .pitch-lines {
-      position: absolute; inset: 20px 280px 20px 20px; border: 4px solid var(--pitch-lines);
-      border-radius: 16px; pointer-events: none;
-    }
-    .pitch-center-circle {
-      position: absolute; top: 50%; left: calc((100% - 280px) / 2); transform: translate(-50%, -50%);
-      width: 220px; height: 220px; border: 4px solid var(--pitch-lines); border-radius: 50%;
-    }
-    .pitch-midline {
-      position: absolute; top: 20px; bottom: 20px; left: calc((100% - 280px) / 2);
-      border-left: 4px solid var(--pitch-lines);
-    }
-
-    /* TILES OP HET VELD */
-    #board-grid {
-      position: absolute; inset: 30px 290px 30px 30px; display: grid;
-      grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(5, 1fr); gap: 8px;
-    }
-    .tile {
-      background: rgba(0, 0, 0, 0.45); border: 2px solid rgba(255,255,255,0.15);
-      border-radius: 10px; position: relative; display: flex; flex-direction: column;
-      align-items: center; justify-content: space-between; padding: 4px;
-      font-size: 0.7rem; font-weight: 700; color: #fff;
-    }
-    .tile-num { position: absolute; top: 3px; left: 5px; font-size: 0.75rem; font-weight: 900; opacity: 0.6; }
-    .tile-icon { font-size: 1.3rem; margin-top: 8px; }
-    .tile-name { text-align: center; line-height: 1; font-size: 0.65rem; opacity: 0.9; }
-    .tile.special { border-color: var(--gold); background: rgba(245, 158, 11, 0.2); }
-    .tile.start { border-color: #3b82f6; background: rgba(59, 130, 246, 0.25); }
-    .tile.finish { border-color: #22c55e; background: rgba(34, 197, 94, 0.3); }
-
-    .tile-tokens {
-      display: flex; gap: 4px; position: absolute; bottom: 4px; left: 50%;
-      transform: translateX(-50%); z-index: 10; flex-wrap: wrap; justify-content: center; max-width: 90%;
-    }
-    .p-token {
-      width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.65rem; font-weight: 900; box-shadow: 0 2px 6px rgba(0,0,0,0.8);
-      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    /* TV SIDEBAR */
-    .tv-sidebar {
-      position: absolute; top: 20px; right: 20px; bottom: 20px; width: 240px;
-      background: var(--card-bg); border: 2px solid rgba(255,255,255,0.15);
-      border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px;
-      backdrop-filter: blur(10px);
-    }
-    .sidebar-title { font-size: 0.9rem; text-transform: uppercase; color: var(--gold); font-weight: 900; letter-spacing: 1px; }
-    .leaderboard-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-    .lb-card {
-      background: rgba(255,255,255,0.06); padding: 10px; border-radius: 10px;
-      border-left: 6px solid #fff; display: flex; flex-direction: column; gap: 2px;
-    }
-    .lb-card.active-turn { background: rgba(245, 158, 11, 0.2); border-color: var(--gold); }
-    .lb-top { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 0.95rem; }
-    .lb-sub { font-size: 0.75rem; opacity: 0.7; }
-
-    /* OVERLAYS */
-    .tv-overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(12px);
-      z-index: 100; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 30px; text-align: center;
-    }
-    .overlay-box {
-      background: #111827; border: 3px solid rgba(255,255,255,0.2); border-radius: 20px;
-      padding: 30px; max-width: 720px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.9);
-      display: flex; flex-direction: column; align-items: center; gap: 18px;
-    }
-
-    /* 3D DOBBELSTEEN ANIMATIE */
-    .dice-scene {
-      width: 140px; height: 140px; perspective: 800px; margin: 20px auto;
-    }
-    .dice-cube {
-      width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
-      transform: rotateX(0deg) rotateY(0deg);
-      transition: transform 0.1s linear;
-    }
-    .dice-cube.rolling {
-      animation: diceRollWild 0.25s infinite linear;
-    }
-    @keyframes diceRollWild {
-      0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-      100% { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
-    }
-
-    .cube-face {
-      position: absolute; width: 140px; height: 140px; background: #ffffff;
-      border: 4px solid #cbd5e1; border-radius: 24px; display: grid; padding: 18px;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 4px 15px rgba(0,0,0,0.4);
-    }
-    .pip {
-      width: 22px; height: 22px; background: #0f172a; border-radius: 50%;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); justify-self: center; align-self: center;
-    }
-    
-    /* Vaste posities voor ogen */
-    .face-1 { transform: rotateY(0deg) translateZ(70px); display: flex; align-items: center; justify-content: center; }
-    .face-6 { transform: rotateY(180deg) translateZ(70px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
-    .face-2 { transform: rotateY(-90deg) translateZ(70px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-    .face-2 .pip:nth-child(2) { grid-column: 2; grid-row: 2; }
-    .face-5 { transform: rotateY(90deg) translateZ(70px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
-    .face-5 .pip:nth-child(1) { grid-column: 1; grid-row: 1; }
-    .face-5 .pip:nth-child(2) { grid-column: 3; grid-row: 1; }
-    .face-5 .pip:nth-child(3) { grid-column: 2; grid-row: 2; }
-    .face-5 .pip:nth-child(4) { grid-column: 1; grid-row: 3; }
-    .face-5 .pip:nth-child(5) { grid-column: 3; grid-row: 3; }
-    .face-3 { transform: rotateX(90deg) translateZ(70px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
-    .face-3 .pip:nth-child(1) { grid-column: 1; grid-row: 1; }
-    .face-3 .pip:nth-child(2) { grid-column: 2; grid-row: 2; }
-    .face-3 .pip:nth-child(3) { grid-column: 3; grid-row: 3; }
-    .face-4 { transform: rotateX(-90deg) translateZ(70px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-
-    /* MOBIELE WEERGAVEN */
-    #mobile-view, #ref-view {
-      display: none; padding: 20px; max-width: 520px; margin: 0 auto; min-height: 100vh;
-      flex-direction: column; gap: 16px;
-    }
-    .m-header {
-      background: var(--card-bg); padding: 14px 18px; border-radius: 14px;
-      display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);
-    }
-    .m-card {
-      background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
-    }
-    .m-input {
-      width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #334155;
-      background: #0f172a; color: #fff; font-size: 1.1rem;
-    }
-    .m-input:focus { border-color: var(--gold); outline: none; }
-
-    .sip-banner {
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-      background: #e11d48; color: #fff; padding: 12px 24px; border-radius: 30px;
-      font-size: 1.2rem; font-weight: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-      z-index: 2000; display: none; text-align: center; max-width: 90vw;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <button id="fs-toggle" onclick="toggleFullscreen()">⛶ Volledig Scherm</button>
-  <div id="sip-alert" class="sip-banner">🍺 2 SLOKKEN DRINKEN!</div>
+  <!-- ALLEEN ZICHTBAAR IN TABLET / TV MODUS -->
+  <button id="fs-toggle" onclick="toggleFullscreen()" style="display: none;">⛶ Volledig Scherm</button>
+  
+  <!-- TIJDELIJKE MELDINGEN VOOR SLOKKEN / STRAFFEN -->
+  <div id="sip-alert" class="sip-banner"></div>
 
-  <!-- 1. ROLLEN KEUZEMENU -->
+  <!-- 1. STARTKEUZE SCHERM -->
   <div id="view-select">
     <h1 style="font-size: 2.2rem; color: var(--gold); font-weight: 900;">⚽ GANZENBORD</h1>
-    <p style="opacity: 0.8; max-width: 380px;">Kies de rol van dit scherm:</p>
+    <p style="opacity: 0.8; max-width: 380px;">Kies de rol van dit apparaat:</p>
     
     <button class="btn btn-green" style="width: 100%; max-width: 320px;" onclick="initTV()">
       📺 1. Tablet / TV Weergave
     </button>
-    <button class="btn btn-purple" style="width: 100%; max-width: 320px;" onclick="initReferee()">
+    <button class="btn btn-purple" style="width: 100%; max-width: 320px;" onclick="showRefereeSetup()">
       ⚖️ 2. De Scheidsrechter (Jij)
     </button>
-    <button class="btn btn-blue" style="width: 100%; max-width: 320px;" onclick="initPlayerLogin()">
+    <button class="btn btn-blue" style="width: 100%; max-width: 320px;" onclick="showPlayerSetup()">
       📱 3. Speler Deelnemen
     </button>
   </div>
 
-  <!-- 2. TV SCHERM -->
+  <!-- 1B. SPELER REGISTRATIE + SELFIE SCHERM -->
+  <div id="player-setup-view" class="setup-container" style="display: none;">
+    <div class="m-card">
+      <h2 style="color: var(--gold); text-align: center;">📱 Speler Aanmelden</h2>
+      
+      <label class="input-label">Kamercode (van TV):</label>
+      <input type="number" id="join-code" class="m-input" placeholder="Bijv. 4829">
+
+      <label class="input-label">Jouw Spelersnaam:</label>
+      <input type="text" id="join-name" class="m-input" placeholder="Naam of bijnaam..." maxlength="14">
+
+      <label class="input-label">Maak je Pionselfie:</label>
+      <div class="camera-box">
+        <video id="camera-stream" autoplay playsinline muted></video>
+        <img id="selfie-preview" style="display: none;" alt="Selfie">
+        <canvas id="selfie-canvas" width="200" height="200" style="display: none;"></canvas>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-yellow" id="btn-take-selfie" style="flex: 1;" onclick="takeSelfie()">
+          📸 Maak Selfie
+        </button>
+        <button class="btn btn-blue" id="btn-retake-selfie" style="flex: 1; display: none;" onclick="retakeSelfie()">
+          🔄 Opnieuw
+        </button>
+      </div>
+
+      <!-- Fallback voor toestellen zonder directe cameratoegang -->
+      <label for="file-selfie-input" class="fallback-upload">
+        Werkt de camera niet? Tik hier om een foto te kiezen/maken
+      </label>
+      <input type="file" id="file-selfie-input" accept="image/*" capture="user" style="display: none;" onchange="handleFileSelfie(event)">
+
+      <button class="btn btn-green" id="btn-join-game" style="width: 100%; margin-top: 8px;" onclick="submitPlayerJoin()">
+        ✅ Betreed de Kleedkamer
+      </button>
+    </div>
+  </div>
+
+  <!-- 1C. SCHEIDSRECHTER LOGIN -->
+  <div id="ref-setup-view" class="setup-container" style="display: none;">
+    <div class="m-card">
+      <h2 style="color: var(--ref); text-align: center;">⚖️ Scheidsrechter Login</h2>
+      <label class="input-label">Kamercode (van TV):</label>
+      <input type="number" id="ref-join-code" class="m-input" placeholder="4-cijferige code">
+      <button class="btn btn-purple" style="width: 100%;" onclick="connectReferee()">
+        Verbind als Scheidsrechter
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. TV / TABLET SCHERM -->
   <div id="tv-view">
     <div class="pitch-container">
       <div class="pitch-lines"></div>
@@ -229,20 +101,18 @@
       </div>
     </div>
 
-    <!-- LOBBY OVERLAY -->
+    <!-- TV LOBBY OVERLAY -->
     <div id="tv-lobby-overlay" class="tv-overlay">
       <div class="overlay-box">
         <h1 style="color: var(--gold); font-size: 2.2rem;">⚽ KLEEDKAMER LOBBY</h1>
-        <p style="font-size: 1.1rem; opacity: 0.8;">Ga op je mobiel naar de site en vul deze kamercode in:</p>
-        <div id="tv-room-code" style="font-size: 4.5rem; font-weight: 900; letter-spacing: 6px; color: #fff; background: #1e293b; padding: 10px 36px; border-radius: 16px; border: 2px dashed var(--gold);">
-          ....
-        </div>
+        <p style="font-size: 1.1rem; opacity: 0.85;">Scan of ga op je telefoon naar de site en vul de kamercode in:</p>
+        <div id="tv-room-code" class="room-code-display">....</div>
         
         <div style="width: 100%; margin-top: 15px;">
           <h3 style="font-size: 1rem; text-transform: uppercase; margin-bottom: 12px; opacity: 0.7;" id="tv-lobby-count">
             Verbonden Spelers (0)
           </h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;" id="tv-lobby-players"></div>
+          <div class="lobby-players-grid" id="tv-lobby-players"></div>
         </div>
 
         <div id="tv-lobby-msg" style="margin-top: 10px; color: var(--gold); font-weight: 700;">
@@ -251,18 +121,19 @@
       </div>
     </div>
 
-    <!-- WIEGELOOT OVERLAY -->
+    <!-- TV STARTVOLGORDE OVERLAY -->
     <div id="tv-roll-order-overlay" class="tv-overlay" style="display: none;">
       <div class="overlay-box">
-        <h2 style="color: var(--gold);">🎲 Wiegeloot-ronde</h2>
-        <p>Iedereen gooit op zijn eigen telefoon. De hoogste worp begint!</p>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; width: 100%; margin-top: 20px;" id="tv-roll-order-grid"></div>
+        <h2 style="color: var(--gold); font-size: 2rem;">🎲 Wie mag er aftrappen?</h2>
+        <p>Iedereen gooit op zijn eigen telefoon. De hoogste worp begint het spel!</p>
+        <div class="lobby-players-grid" style="margin-top: 20px;" id="tv-roll-order-grid"></div>
       </div>
     </div>
 
-    <!-- DOBBEL OVERLAY MET 3D CUBE -->
+    <!-- TV DOBBEL OVERLAY MET 3D CUBE -->
     <div id="tv-dice-overlay" class="tv-overlay" style="display: none;">
       <div class="overlay-box">
+        <div id="tv-dice-player-avatar" class="avatar-large"></div>
         <h2 id="tv-dice-turn-player" style="font-size: 1.8rem;">Speler is aan de beurt</h2>
         
         <div class="dice-scene">
@@ -288,45 +159,42 @@
       </div>
     </div>
 
-    <!-- VRAAG OVERLAY -->
+    <!-- TV VRAAG OVERLAY -->
     <div id="tv-question-overlay" class="tv-overlay" style="display: none;">
       <div class="overlay-box">
-        <div id="tv-q-cat" style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.1);">
-          Categorie
-        </div>
-        <h2 id="tv-q-text" style="font-size: 1.7rem; font-weight: 800; line-height: 1.3;">
-          Vraagtekst komt hier...
-        </h2>
+        <div id="tv-q-cat" class="cat-pill">Categorie</div>
+        <h2 id="tv-q-text" style="font-size: 1.7rem; font-weight: 800; line-height: 1.3;">Vraagtekst...</h2>
         <div id="tv-q-status" style="font-size: 1.1rem; color: var(--gold); font-weight: 700;">
-          Spelers voeren antwoord in op mobiel...
+          Antwoorden worden ingevoerd op mobiel...
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 3. MOBIEL: SPELER -->
+  <!-- 3. MOBIEL: SPELER WEERGAVE -->
   <div id="mobile-view">
     <div class="m-header">
-      <div>
-        <div id="m-player-name" style="font-weight: 900; font-size: 1.2rem;">Speler</div>
-        <div id="m-tile-info" style="font-size: 0.8rem; opacity: 0.7;">Vak 1 (Start)</div>
-      </div>
-      <div id="m-sips-badge" style="font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 8px;">
-        🍺 0 slokken
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img id="m-header-avatar" src="" class="avatar-small" alt="Avatar">
+        <div>
+          <div id="m-player-name" style="font-weight: 900; font-size: 1.2rem;">Speler</div>
+          <!-- VAKJE PAS ZICHTBAAR NA START VAN HET SPEL -->
+          <div id="m-tile-info" style="font-size: 0.85rem; opacity: 0.8; display: none;">Vak 1 (Kleedkamer)</div>
+        </div>
       </div>
     </div>
 
     <div id="m-lobby-card" class="m-card" style="text-align: center;">
       <h3 style="color: var(--gold);">In de Kleedkamer</h3>
-      <p style="opacity: 0.8;">Je bent geregistreerd! Kijk naar de TV tot de scheidsrechter start.</p>
+      <p style="opacity: 0.8;">Je zit klaar in de kleedkamer! Kijk naar het grote scherm tot de scheidsrechter het spel start.</p>
     </div>
 
     <div id="m-roll-order-card" class="m-card" style="display: none; text-align: center;">
-      <h3>🎲 Wiegeloot-worp</h3>
-      <p style="opacity: 0.8;">Rol om te zien wie als eerste mag starten!</p>
+      <h3>🎲 Gooi voor de Aftrap!</h3>
+      <p style="opacity: 0.8;">Rol de dobbelsteen om te bepalen wie als eerste mag beginnen.</p>
       
-      <div class="dice-scene" style="width: 100px; height: 100px;">
-        <div class="dice-cube" id="m-order-dice" style="transform: scale(0.7) rotateY(0deg);">
+      <div class="dice-scene" style="width: 110px; height: 110px;">
+        <div class="dice-cube" id="m-order-dice" style="transform: scale(0.75) rotateX(-15deg) rotateY(20deg);">
           <div class="cube-face face-1"><div class="pip"></div></div>
           <div class="cube-face face-6">
             <div class="pip"></div><div class="pip"></div><div class="pip"></div>
@@ -343,16 +211,16 @@
       </div>
 
       <button class="btn btn-yellow" style="width: 100%; margin-top: 10px;" id="m-btn-roll-order" onclick="playerRollOrder()">
-        Gooi Dobbelsteen!
+        🎲 Rol Dobbelsteen!
       </button>
-      <div id="m-roll-order-result" style="font-size: 1.8rem; font-weight: 900; margin-top: 10px; color: var(--gold);"></div>
+      <div id="m-roll-order-result" style="font-size: 1.5rem; font-weight: 900; margin-top: 10px; color: var(--gold);"></div>
     </div>
 
     <div id="m-turn-card" class="m-card" style="display: none; text-align: center;">
       <h2 style="color: var(--gold);">Jij bent aan de beurt!</h2>
       
-      <div class="dice-scene" style="width: 100px; height: 100px;">
-        <div class="dice-cube" id="m-turn-dice" style="transform: scale(0.7) rotateY(0deg);">
+      <div class="dice-scene" style="width: 110px; height: 110px;">
+        <div class="dice-cube" id="m-turn-dice" style="transform: scale(0.75) rotateX(-15deg) rotateY(20deg);">
           <div class="cube-face face-1"><div class="pip"></div></div>
           <div class="cube-face face-6">
             <div class="pip"></div><div class="pip"></div><div class="pip"></div>
@@ -376,42 +244,46 @@
       </button>
     </div>
 
+    <div id="m-wait-turn-card" class="m-card" style="display: none; text-align: center;">
+      <h3 id="m-wait-turn-text" style="color: #94a3b8;">Even geduld...</h3>
+      <p style="opacity: 0.7; font-size: 0.9rem;">Kijk naar het bord op de TV.</p>
+    </div>
+
     <div id="m-answer-card" class="m-card" style="display: none;">
       <h3 id="m-q-cat" style="color: var(--gold); font-size: 0.9rem; text-transform: uppercase;">Categorie</h3>
       <p id="m-q-text" style="font-size: 1.1rem; font-weight: 700;">Vraag komt hier...</p>
-      <input type="text" id="m-input-ans" class="m-input" placeholder="Jouw antwoord..." autocomplete="off">
-      <button class="btn btn-blue" style="width: 100%;" onclick="playerSubmitAnswer()">
-        Verstuur naar Scheidsrechter
+      <input type="text" id="m-input-ans" class="m-input" placeholder="Typ je antwoord..." autocomplete="off">
+      <button class="btn btn-blue" id="m-btn-submit-ans" style="width: 100%;" onclick="playerSubmitAnswer()">
+        Verstuur Antwoord
       </button>
-      <div id="m-ans-status" style="font-size: 0.85rem; color: #94a3b8; text-align: center;"></div>
+      <div id="m-ans-status" style="font-size: 0.85rem; color: #10b981; font-weight: 700; text-align: center;"></div>
     </div>
   </div>
 
-  <!-- 4. MOBIEL: SCHEIDSRECHTER -->
+  <!-- 4. MOBIEL: SCHEIDSRECHTER WEERGAVE -->
   <div id="ref-view">
     <div class="m-header" style="border-left: 6px solid var(--ref);">
       <div>
         <div style="font-weight: 900; font-size: 1.2rem; color: var(--ref);">⚖️ DE SCHEIDSRECHTER</div>
-        <div style="font-size: 0.8rem; opacity: 0.7;">Beheer alle worpen, vragen en straffen</div>
-      </div>
-      <div id="ref-sips" style="font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 8px;">
-        🍺 0 slokken
+        <div style="font-size: 0.8rem; opacity: 0.7;" id="ref-status-sub">Kleedkamer Beheer</div>
       </div>
     </div>
 
+    <!-- VOOR DE START: ALLEEN DEELNEMERS (MET KICK KNOP) + START SPEL KNOP -->
     <div id="ref-lobby-card" class="m-card">
-      <h3 id="ref-player-count">Aangemelde Spelers (0):</h3>
-      <div id="ref-player-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
-      <button class="btn btn-green" id="ref-btn-start" style="width: 100%; margin-top: 10px;" onclick="refStartWiegeloot()">
-        Start Spel (Wiegeloot-ronde)
+      <h3 id="ref-player-count">Deelnemers (0):</h3>
+      <div id="ref-player-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      <button class="btn btn-green" id="ref-btn-start" style="width: 100%; margin-top: 12px;" onclick="refStartGame()">
+        🚀 Start het Spel
       </button>
     </div>
 
+    <!-- TIJDENS HET SPEL: VRAAG BEOORDELEN -->
     <div id="ref-judge-card" class="m-card" style="display: none;">
       <div style="font-size: 0.8rem; color: var(--gold); text-transform: uppercase; font-weight: 800;">Actuele Vraag</div>
       <p id="ref-q-text" style="font-weight: 700;"></p>
       
-      <div style="background: #422006; border: 2px solid var(--gold); border-radius: 12px; padding: 14px; color: #fef08a; font-weight: 700;">
+      <div class="secret-ans-box">
         <span style="font-size: 0.75rem; text-transform: uppercase; display: block; opacity: 0.8;">Geheim Antwoord:</span>
         <span id="ref-q-secret-ans">...</span>
       </div>
@@ -420,12 +292,13 @@
       <div id="ref-answers-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
       
       <button class="btn btn-blue" style="width: 100%; margin-top: 10px;" onclick="refFinishRound()">
-        Volgende Beurt
+        Ronde Voltooien & Volgende Beurt
       </button>
     </div>
 
-    <div class="m-card">
-      <h4 style="color: var(--gold);">⚡ Scheidsrechter Straffen</h4>
+    <!-- TIJDENS HET SPEL: OVERZICHT & KAARTEN (VERBORGEN IN DE LOBBY) -->
+    <div id="ref-controls-card" class="m-card" style="display: none;">
+      <h4 style="color: var(--gold);">⚡ Scheidsrechter Ingrijpen</h4>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <button class="btn btn-yellow" style="color: #000; font-size: 0.9rem;" onclick="refCardPenalty('geel')">
           🟨 Gele Kaart (2 slokken)
@@ -434,642 +307,12 @@
           🟥 Rode Kaart (Adtje!)
         </button>
       </div>
-      <button class="btn btn-purple" style="width: 100%; font-size: 0.9rem; margin-top: 6px;" onclick="refDrinkSelf()">
-        🍺 Scheidsrechter drinkt zelf mee (+1)
-      </button>
+
+      <h4 style="margin-top: 10px; opacity: 0.8;">Spelers in het spel (Beheer / Kick):</h4>
+      <div id="ref-active-player-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
   </div>
 
-  <script>
-    /* DYNAMISCHE KLEUREN VOOR SPELERS DIE ZICH AANMELDEN */
-    const PLAYER_COLORS = ['#ef4444', '#3b82f6', '#eab308', '#22c55e', '#ec4899', '#06b6d4', '#f97316'];
-    let PLAYERS = [];
-
-    let refSips = 0;
-    let turnOrder = [];
-    let currentTurnIndex = 0;
-    let pendingRoll = 0;
-    let currentQ = null;
-    let receivedAnswers = {};
-
-    /* ROTATIE TARGETS VOOR DE CUBE */
-    const DICE_ROTATIONS = {
-      1: { x: 0, y: 0 },
-      6: { x: 0, y: 180 },
-      2: { x: 0, y: 90 },
-      5: { x: 0, y: -90 },
-      3: { x: -90, y: 0 },
-      4: { x: 90, y: 0 }
-    };
-
-    /* 45 GANZENBORD VAKJES */
-    const BOARD_TILES = [];
-    const CATEGORIES = [
-      { id: 'roemenie', name: '🇷🇴 Roemeens Voetbal', icon: '🇷🇴' },
-      { id: 'wk', name: '🌍 Het WK', icon: '🌍' },
-      { id: 'audio', name: '🔊 Commentaar & Geluid', icon: '🔊' },
-      { id: 'algemeen', name: '⚽ Algemene Kennis', icon: '⚽' },
-      { id: 'kelder', name: '🍺 Kelderklasse', icon: '🍺' },
-      { id: 'var', name: '⚖️ VAR & Scheids', icon: '⚖️' }
-    ];
-
-    for (let i = 1; i <= 45; i++) {
-      let type = 'normal';
-      let icon = '⚽';
-      let name = 'Vak ' + i;
-      let cat = CATEGORIES[i % CATEGORIES.length].id;
-
-      if (i === 1) { type = 'start'; icon = '🚪'; name = 'Kleedkamer'; }
-      else if (i === 10) { type = 'special'; icon = '☕'; name = 'De Rust'; }
-      else if (i === 20) { type = 'special'; icon = '🚑'; name = 'De Put (Kruisband)'; }
-      else if (i === 30) { type = 'special'; icon = '🟥'; name = 'Schorsing (Bajes)'; }
-      else if (i === 40) { type = 'special'; icon = '💀'; name = 'VAR Buitenspel (Dood)'; }
-      else if (i === 45) { type = 'finish'; icon = '🏆'; name = 'De Kantineschaal'; }
-      else {
-        icon = CATEGORIES[i % CATEGORIES.length].icon;
-        name = CATEGORIES[i % CATEGORIES.length].name.split(' ')[1];
-      }
-      BOARD_TILES.push({ num: i, type, icon, name, cat });
-    }
-
-    const QUESTIONS = [
-      { cat: 'roemenie', q: 'Welke Roemeense club won in 1986 de Europacup 1 door Barcelona na penalty\'s te verslaan?', a: 'Steaua Boekarest', group: true },
-      { cat: 'roemenie', q: 'Welke legendarische spelmaker stond bekend als "De Maradona van de Karpaten"?', a: 'Gheorghe Hagi', group: false },
-      { cat: 'wk', q: 'In welk land werd het allereerste WK voetbal in 1930 gehouden?', a: 'Uruguay', group: true },
-      { cat: 'wk', q: 'Wie maakte in de finale van 2014 in de verlenging het winnende doelpunt voor Duitsland tegen Argentinië?', a: 'Mario Götze', group: false },
-      { cat: 'audio', q: 'Maak het legendarische citaat van Jack van Gelder in 1998 af: "DENNIS BERGKAMP! DENNIS BERGKAMP! ..."', a: '"...BERRRGKAMP! BERRRGKAMP!"', group: true },
-      { cat: 'algemeen', q: 'Welke club won de Champions League drie keer op rij tussen 2016 en 2018?', a: 'Real Madrid', group: false },
-      { cat: 'kelder', q: 'Wat is de officiële straf als een speler de hoekvlag meeneemt naar de kantine na de wedstrijd?', a: 'Een rondje geven / Kist bier', group: false },
-      { cat: 'var', q: 'Mag de scheidsrechter een rode kaart geven nadat het eindsignaal al heeft geklonken?', a: 'Ja (zolang de scheidsrechter nog op het veld is)', group: false }
-    ];
-
-    let peer = null;
-    let connections = [];
-    let clientConn = null;
-    let myRole = '';
-    let myPlayerId = '';
-
-    function makeRoomCode() {
-      return Math.floor(1000 + Math.random() * 9000).toString();
-    }
-
-    /* 1. TV INIT */
-    function initTV() {
-      myRole = 'tv';
-      document.getElementById('view-select').style.display = 'none';
-      document.getElementById('tv-view').style.display = 'block';
-      buildBoard();
-      updateTVLeaderboard();
-
-      const code = makeRoomCode();
-      document.getElementById('tv-room-code').innerText = code;
-      document.getElementById('tv-room-code-badge').innerText = code;
-
-      peer = new Peer('gzb-' + code);
-      peer.on('connection', (conn) => {
-        connections.push(conn);
-        conn.on('data', (data) => handleTVIncomingData(data, conn));
-      });
-
-      renderLobbyTV();
-    }
-
-    function renderLobbyTV() {
-      const container = document.getElementById('tv-lobby-players');
-      document.getElementById('tv-lobby-count').innerText = `Verbonden Spelers (${PLAYERS.length})`;
-      if (PLAYERS.length === 0) {
-        container.innerHTML = '<div style="grid-column: 1/-1; opacity:0.5;">Nog geen spelers verbonden...</div>';
-        return;
-      }
-      container.innerHTML = PLAYERS.map(p => `
-        <div style="background: rgba(34,197,94,0.15); border: 2px solid ${p.color}; padding: 14px; border-radius: 12px; text-align: center;">
-          <div style="font-size: 1.6rem;">✅</div>
-          <div style="font-weight: 800; color: ${p.color}; margin-top: 6px;">${p.name}</div>
-          <div style="font-size: 0.75rem; opacity: 0.7;">Klaar</div>
-        </div>
-      `).join('');
-    }
-
-    /* 2. REFEREE INIT */
-    function initReferee() {
-      myRole = 'ref';
-      const code = prompt("Voer de 4-cijferige kamercode in van de TV:");
-      if (!code) return;
-
-      document.getElementById('view-select').style.display = 'none';
-      document.getElementById('ref-view').style.display = 'flex';
-
-      peer = new Peer();
-      peer.on('open', () => {
-        clientConn = peer.connect('gzb-' + code);
-        clientConn.on('open', () => {
-          clientConn.send({ type: 'REF_JOIN' });
-        });
-        clientConn.on('data', handleRefIncomingData);
-      });
-      renderRefPlayerList();
-    }
-
-    /* 3. PLAYER INIT */
-    function initPlayerLogin() {
-      const code = prompt("Voer de 4-cijferige kamercode in van de TV:");
-      if (!code) return;
-      const customName = prompt("Verzin je eigen spelersnaam:");
-      if (!customName || !customName.trim()) return;
-
-      myRole = 'player';
-      myPlayerId = 'p_' + Math.random().toString(36).substr(2, 6);
-
-      document.getElementById('view-select').style.display = 'none';
-      document.getElementById('mobile-view').style.display = 'flex';
-      document.getElementById('m-player-name').innerText = customName.trim();
-
-      peer = new Peer();
-      peer.on('open', () => {
-        clientConn = peer.connect('gzb-' + code);
-        clientConn.on('open', () => {
-          clientConn.send({
-            type: 'PLAYER_JOIN',
-            playerId: myPlayerId,
-            name: customName.trim()
-          });
-        });
-        clientConn.on('data', handlePlayerIncomingData);
-      });
-    }
-
-    /* ========================================================
-       TV LOGICA
-       ======================================================== */
-    function handleTVIncomingData(data, conn) {
-      if (data.type === 'PLAYER_JOIN') {
-        const assignedColor = PLAYER_COLORS[PLAYERS.length % PLAYER_COLORS.length];
-        const newP = {
-          id: data.playerId,
-          name: data.name,
-          color: assignedColor,
-          pos: 1,
-          sips: 0,
-          orderRoll: 0,
-          connected: true
-        };
-        PLAYERS.push(newP);
-        renderLobbyTV();
-        renderTokens();
-        updateTVLeaderboard();
-        broadcastToAll({ type: 'SYNC_PLAYERS', players: PLAYERS });
-      }
-      else if (data.type === 'REF_JOIN') {
-        broadcastToAll({ type: 'SYNC_PLAYERS', players: PLAYERS });
-      }
-      else if (data.type === 'REF_START_WIEGELOOT') {
-        if (PLAYERS.length === 0) return;
-        document.getElementById('tv-lobby-overlay').style.display = 'none';
-        document.getElementById('tv-roll-order-overlay').style.display = 'flex';
-        renderTVRollOrder();
-        broadcastToAll({ type: 'START_WIEGELOOT' });
-      }
-      else if (data.type === 'PLAYER_WIEGELOOT_ROLL') {
-        const p = PLAYERS.find(x => x.id === data.playerId);
-        if (p) {
-          p.orderRoll = data.roll;
-          renderTVRollOrder();
-          checkAllRollOrderFinished();
-        }
-      }
-      else if (data.type === 'PLAYER_DICE_ROLL') {
-        animateDiceCube('tv-dice-cube', data.roll, () => {
-          document.getElementById('tv-dice-status').innerText = `Gegooid: ${data.roll}! Wachten op stappen zetten...`;
-        });
-      }
-      else if (data.type === 'PLAYER_EXECUTE_STEPS') {
-        executePlayerSteps(data.playerId, data.steps);
-      }
-      else if (data.type === 'PLAYER_SUBMIT_ANSWER') {
-        receivedAnswers[data.playerId] = data.ans;
-        broadcastToAll({ type: 'REF_RECEIVE_ANSWERS', answers: receivedAnswers });
-      }
-      else if (data.type === 'REF_JUDGE_RESULT') {
-        applyJudgeResult(data);
-      }
-      else if (data.type === 'REF_CARD_PENALTY') {
-        showSipAlert(data.msg);
-        broadcastToAll({ type: 'SIP_ALERT', msg: data.msg });
-      }
-    }
-
-    function broadcastToAll(msg) {
-      connections.forEach(c => {
-        if (c.open) c.send(msg);
-      });
-    }
-
-    function buildBoard() {
-      const grid = document.getElementById('board-grid');
-      grid.innerHTML = '';
-      BOARD_TILES.forEach(tile => {
-        const div = document.createElement('div');
-        div.className = `tile ${tile.type}`;
-        div.id = `tile-${tile.num}`;
-        div.innerHTML = `
-          <span class="tile-num">${tile.num}</span>
-          <div class="tile-icon">${tile.icon}</div>
-          <div class="tile-name">${tile.name}</div>
-          <div class="tile-tokens" id="tokens-tile-${tile.num}"></div>
-        `;
-        grid.appendChild(div);
-      });
-      renderTokens();
-    }
-
-    function renderTokens() {
-      BOARD_TILES.forEach(t => {
-        const el = document.getElementById(`tokens-tile-${t.num}`);
-        if (el) el.innerHTML = '';
-      });
-
-      PLAYERS.forEach(p => {
-        const el = document.getElementById(`tokens-tile-${p.pos}`);
-        if (el) {
-          const tok = document.createElement('div');
-          tok.className = 'p-token';
-          tok.style.background = p.color;
-          tok.innerText = p.name.charAt(0).toUpperCase();
-          el.appendChild(tok);
-        }
-      });
-    }
-
-    function updateTVLeaderboard() {
-      const sorted = [...PLAYERS].sort((a, b) => b.pos - a.pos);
-      const activePlayerId = turnOrder[currentTurnIndex];
-
-      document.getElementById('tv-leaderboard').innerHTML = sorted.map((p, idx) => {
-        const dist = 45 - p.pos;
-        const isActive = p.id === activePlayerId;
-        return `
-          <div class="lb-card ${isActive ? 'active-turn' : ''}" style="border-color: ${p.color};">
-            <div class="lb-top">
-              <span style="color: ${p.color};">${idx + 1}. ${p.name}</span>
-              <span style="font-size: 0.8rem; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 6px;">
-                ${dist === 0 ? '🏆 FINISH' : 'Nog ' + dist}
-              </span>
-            </div>
-            <div class="lb-sub">Vak ${p.pos} • 🍺 ${p.sips} slokken</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderTVRollOrder() {
-      const grid = document.getElementById('tv-roll-order-grid');
-      grid.innerHTML = PLAYERS.map(p => `
-        <div style="background: rgba(255,255,255,0.06); border: 2px solid ${p.color}; padding: 16px; border-radius: 12px; text-align: center;">
-          <h3 style="color:${p.color};">${p.name}</h3>
-          <div style="font-size: 2.8rem; font-weight: 900; margin: 10px 0; color: var(--gold);">
-            ${p.orderRoll > 0 ? p.orderRoll : '...'}
-          </div>
-          <div style="font-size: 0.8rem; opacity: 0.7;">
-            ${p.orderRoll > 0 ? 'Gegooid' : 'Aan het rollen...'}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function checkAllRollOrderFinished() {
-      if (PLAYERS.length > 0 && PLAYERS.every(p => p.orderRoll > 0)) {
-        turnOrder = [...PLAYERS].sort((a, b) => b.orderRoll - a.orderRoll).map(p => p.id);
-        setTimeout(() => {
-          document.getElementById('tv-roll-order-overlay').style.display = 'none';
-          startTurn();
-        }, 2200);
-      }
-    }
-
-    function startTurn() {
-      const activePlayer = PLAYERS.find(p => p.id === turnOrder[currentTurnIndex]);
-      updateTVLeaderboard();
-
-      document.getElementById('tv-dice-overlay').style.display = 'flex';
-      document.getElementById('tv-dice-turn-player').innerText = `${activePlayer.name} is aan de beurt!`;
-      document.getElementById('tv-dice-turn-player').style.color = activePlayer.color;
-      document.getElementById('tv-dice-status').innerText = 'Wachten op worp vanaf mobiel...';
-
-      // Reset cube
-      const cube = document.getElementById('tv-dice-cube');
-      cube.classList.remove('rolling');
-      cube.style.transform = 'rotateX(0deg) rotateY(0deg)';
-
-      broadcastToAll({
-        type: 'TURN_STARTED',
-        activePlayerId: activePlayer.id
-      });
-    }
-
-    /* REALISTISCHE 3D DOBBELSTEEN ANIMATIE MET AUDIO TIKKEN */
-    function animateDiceCube(elementId, targetValue, onFinish) {
-      const cube = document.getElementById(elementId);
-      if (!cube) return;
-
-      cube.classList.add('rolling');
-      
-      let rolls = 0;
-      const soundInterval = setInterval(() => {
-        playAudioBeep(220 + Math.random() * 200, 0.05);
-        rolls++;
-        if (rolls > 12) clearInterval(soundInterval);
-      }, 100);
-
-      setTimeout(() => {
-        cube.classList.remove('rolling');
-        const rot = DICE_ROTATIONS[targetValue] || { x: 0, y: 0 };
-        // Extra ronddraai voor soepele stop
-        cube.style.transform = `rotateX(${rot.x + 720}deg) rotateY(${rot.y + 720}deg)`;
-        playAudioBeep(650, 0.2);
-        if (onFinish) onFinish();
-      }, 1400);
-    }
-
-    function executePlayerSteps(playerId, steps) {
-      document.getElementById('tv-dice-overlay').style.display = 'none';
-      const player = PLAYERS.find(p => p.id === playerId);
-      let remaining = steps;
-
-      const stepInterval = setInterval(() => {
-        if (remaining <= 0 || player.pos >= 45) {
-          clearInterval(stepInterval);
-          checkTileLanded(player);
-          return;
-        }
-        player.pos++;
-        remaining--;
-        renderTokens();
-        updateTVLeaderboard();
-        playAudioBeep(420, 0.08);
-      }, 350);
-    }
-
-    function checkTileLanded(player) {
-      if (player.pos >= 45) {
-        player.pos = 45;
-        triggerVictory(player);
-        return;
-      }
-
-      // KOPDUEL
-      const others = PLAYERS.filter(p => p.id !== player.id && p.pos === player.pos);
-      if (others.length > 0) {
-        showSipAlert(`💥 KOPDUEL! ${player.name} & ${others[0].name} drinken 2 slokken!`);
-        player.sips += 2;
-        others[0].sips += 2;
-        updateTVLeaderboard();
-      }
-
-      currentQ = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
-      receivedAnswers = {};
-
-      document.getElementById('tv-question-overlay').style.display = 'flex';
-      document.getElementById('tv-q-cat').innerText = currentQ.cat.toUpperCase();
-      document.getElementById('tv-q-text').innerText = currentQ.q;
-      document.getElementById('tv-q-status').innerText = currentQ.group ? 'Groepsvraag: Iedereen antwoordt op mobiel!' : `${player.name} voert antwoord in op mobiel...`;
-
-      broadcastToAll({
-        type: 'TRIGGER_QUESTION',
-        question: currentQ,
-        activePlayerId: player.id
-      });
-    }
-
-    function applyJudgeResult(data) {
-      document.getElementById('tv-question-overlay').style.display = 'none';
-      showSipAlert(data.summary);
-
-      data.updatedPlayers.forEach(up => {
-        const p = PLAYERS.find(x => x.id === up.id);
-        if (p) p.sips = up.sips;
-      });
-      updateTVLeaderboard();
-
-      currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
-      setTimeout(() => {
-        startTurn();
-      }, 2000);
-    }
-
-    function triggerVictory(winner) {
-      confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-      alert(`🏆 KAMPIOEN! ${winner.name} bereikt de Kampioensschaal!`);
-    }
-
-    /* ========================================================
-       MOBIELE SPELER ACTIES
-       ======================================================== */
-    function handlePlayerIncomingData(data) {
-      if (data.type === 'SYNC_PLAYERS') {
-        const me = data.players.find(x => x.id === myPlayerId);
-        if (me) {
-          document.getElementById('m-player-name').style.color = me.color;
-          document.getElementById('m-tile-info').innerText = `Vak ${me.pos}`;
-          document.getElementById('m-sips-badge').innerText = `🍺 ${me.sips} slokken`;
-        }
-      }
-      else if (data.type === 'START_WIEGELOOT') {
-        document.getElementById('m-lobby-card').style.display = 'none';
-        document.getElementById('m-roll-order-card').style.display = 'block';
-      }
-      else if (data.type === 'TURN_STARTED') {
-        const isMyTurn = data.activePlayerId === myPlayerId;
-        document.getElementById('m-roll-order-card').style.display = 'none';
-        document.getElementById('m-answer-card').style.display = 'none';
-        document.getElementById('m-turn-card').style.display = isMyTurn ? 'block' : 'none';
-        document.getElementById('m-btn-roll').style.display = 'block';
-        document.getElementById('m-btn-step').style.display = 'none';
-
-        const cube = document.getElementById('m-turn-dice');
-        if (cube) {
-          cube.classList.remove('rolling');
-          cube.style.transform = 'scale(0.7) rotateX(0deg) rotateY(0deg)';
-        }
-      }
-      else if (data.type === 'TRIGGER_QUESTION') {
-        const shouldAnswer = data.question.group || data.activePlayerId === myPlayerId;
-        if (shouldAnswer) {
-          document.getElementById('m-turn-card').style.display = 'none';
-          document.getElementById('m-answer-card').style.display = 'block';
-          document.getElementById('m-q-cat').innerText = data.question.cat.toUpperCase();
-          document.getElementById('m-q-text').innerText = data.question.q;
-          document.getElementById('m-input-ans').value = '';
-          document.getElementById('m-ans-status').innerText = '';
-        }
-      }
-      else if (data.type === 'SIP_ALERT') {
-        showSipAlert(data.msg);
-      }
-    }
-
-    function playerRollOrder() {
-      const roll = Math.floor(Math.random() * 6) + 1;
-      document.getElementById('m-btn-roll-order').style.display = 'none';
-
-      animateDiceCube('m-order-dice', roll, () => {
-        document.getElementById('m-roll-order-result').innerText = `Gegooid: ${roll}!`;
-        clientConn.send({ type: 'PLAYER_WIEGELOOT_ROLL', playerId: myPlayerId, roll: roll });
-      });
-    }
-
-    function playerRollDice() {
-      pendingRoll = Math.floor(Math.random() * 6) + 1;
-      document.getElementById('m-btn-roll').style.display = 'none';
-
-      animateDiceCube('m-turn-dice', pendingRoll, () => {
-        document.getElementById('m-btn-step').style.display = 'block';
-        document.getElementById('m-btn-step').innerText = `🏃 Zet ${pendingRoll} Stappen!`;
-      });
-
-      clientConn.send({ type: 'PLAYER_DICE_ROLL', playerId: myPlayerId, roll: pendingRoll });
-    }
-
-    function playerExecuteSteps() {
-      document.getElementById('m-turn-card').style.display = 'none';
-      clientConn.send({ type: 'PLAYER_EXECUTE_STEPS', playerId: myPlayerId, steps: pendingRoll });
-    }
-
-    function playerSubmitAnswer() {
-      const ans = document.getElementById('m-input-ans').value.trim();
-      if (!ans) return;
-      document.getElementById('m-ans-status').innerText = '✅ Verstuurd naar Scheidsrechter!';
-      clientConn.send({ type: 'PLAYER_SUBMIT_ANSWER', playerId: myPlayerId, ans: ans });
-    }
-
-    /* ========================================================
-       SCHEIDSRECHTER ACTIES
-       ======================================================== */
-    function renderRefPlayerList() {
-      const list = document.getElementById('ref-player-list');
-      document.getElementById('ref-player-count').innerText = `Aangemelde Spelers (${PLAYERS.length}):`;
-      if (PLAYERS.length === 0) {
-        list.innerHTML = '<div style="opacity:0.5;">Wachten op aanmeldingen...</div>';
-        return;
-      }
-      list.innerHTML = PLAYERS.map(p => `
-        <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; border-left: 4px solid ${p.color};">
-          <span style="font-weight:700;">${p.name}</span>
-          <span>Vak ${p.pos} • 🍺 ${p.sips}</span>
-        </div>
-      `).join('');
-    }
-
-    function handleRefIncomingData(data) {
-      if (data.type === 'SYNC_PLAYERS') {
-        PLAYERS = data.players;
-        renderRefPlayerList();
-      }
-      else if (data.type === 'TRIGGER_QUESTION') {
-        document.getElementById('ref-judge-card').style.display = 'block';
-        document.getElementById('ref-q-text').innerText = data.question.q;
-        document.getElementById('ref-q-secret-ans').innerText = data.question.a;
-        document.getElementById('ref-answers-list').innerHTML = '<div style="opacity:0.6;">Wachten op antwoorden...</div>';
-      }
-      else if (data.type === 'REF_RECEIVE_ANSWERS') {
-        renderRefAnswers(data.answers);
-      }
-    }
-
-    function renderRefAnswers(answers) {
-      const list = document.getElementById('ref-answers-list');
-      list.innerHTML = Object.keys(answers).map(pId => {
-        const p = PLAYERS.find(x => x.id === pId);
-        if (!p) return '';
-        return `
-          <div style="background: rgba(255,255,255,0.08); padding: 10px; border-radius: 8px; border-left: 4px solid ${p.color};">
-            <div style="font-weight: 800; font-size: 0.9rem;">${p.name}:</div>
-            <div style="font-size: 1.1rem; color: #fff; margin: 4px 0;">"${answers[pId]}"</div>
-            <div style="display: flex; gap: 8px; margin-top: 6px;">
-              <button class="btn btn-green" style="padding: 6px 14px; font-size: 0.8rem;" onclick="refMark('${pId}', true)">✅ Goed (+ Deel 2 slokken uit)</button>
-              <button class="btn btn-red" style="padding: 6px 14px; font-size: 0.8rem;" onclick="refMark('${pId}', false)">❌ Fout (Drink 2 slokken)</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function refMark(pId, isCorrect) {
-      const p = PLAYERS.find(x => x.id === pId);
-      if (!p) return;
-      if (!isCorrect) p.sips += 2;
-      alert(`${p.name} gemarkeerd als ${isCorrect ? 'GOED' : 'FOUT'}`);
-    }
-
-    function refFinishRound() {
-      document.getElementById('ref-judge-card').style.display = 'none';
-      clientConn.send({
-        type: 'REF_JUDGE_RESULT',
-        summary: 'Scheidsrechter heeft de antwoorden gekeurd!',
-        updatedPlayers: PLAYERS
-      });
-      renderRefPlayerList();
-    }
-
-    function refStartWiegeloot() {
-      if (PLAYERS.length === 0) {
-        alert("Wacht tot er ten minste 1 speler is aangemeld!");
-        return;
-      }
-      document.getElementById('ref-lobby-card').style.display = 'none';
-      clientConn.send({ type: 'REF_START_WIEGELOOT' });
-    }
-
-    function refCardPenalty(type) {
-      const names = PLAYERS.map(p => p.name).join(', ');
-      const pName = prompt(`Aan wie geef je de kaart? (${names})`);
-      const p = PLAYERS.find(x => x.name.toLowerCase() === pName?.trim().toLowerCase());
-      if (!p) return;
-
-      const sips = type === 'geel' ? 2 : 5;
-      p.sips += sips;
-      const msg = type === 'geel' ? `🟨 GELE KAART voor ${p.name}! (2 slokken)` : `🟥 RODE KAART voor ${p.name}! (Adtje!)`;
-      
-      clientConn.send({ type: 'REF_CARD_PENALTY', msg: msg });
-      renderRefPlayerList();
-    }
-
-    function refDrinkSelf() {
-      refSips++;
-      document.getElementById('ref-sips').innerText = `🍺 ${refSips} slokken`;
-      showSipAlert(`Scheidsrechter neemt zelf een slok! 🍺 (Totaal: ${refSips})`);
-    }
-
-    /* ========================================================
-       AUDIO & HELPERS
-       ======================================================== */
-    function showSipAlert(msg) {
-      const banner = document.getElementById('sip-alert');
-      banner.innerText = msg;
-      banner.style.display = 'block';
-      setTimeout(() => { banner.style.display = 'none'; }, 4000);
-    }
-
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } else {
-        document.exitFullscreen().catch(() => {});
-      }
-    }
-
-    function playAudioBeep(freq, duration) {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = freq;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
-        osc.stop(ctx.currentTime + duration);
-      } catch (e) {}
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
