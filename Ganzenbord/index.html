@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Voetbalweekend Ganzenbord</title>
+  <title>Voetbalweekend Ganzenbord (63 Vakjes)</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -13,13 +13,13 @@
   <!-- ALLEEN ZICHTBAAR IN TABLET / TV MODUS -->
   <button id="fs-toggle" onclick="toggleFullscreen()" style="display: none;">⛶ Volledig Scherm</button>
   
-  <!-- TIJDELIJKE MELDINGEN VOOR KAARTEN / ALERTS -->
+  <!-- TIJDELIJKE MELDINGEN VOOR KAARTEN / STRAFFEN -->
   <div id="sip-alert" class="sip-banner"></div>
 
   <!-- 1. STARTKEUZE SCHERM -->
   <div id="view-select" class="screen-view">
-    <h1 style="font-size: 2rem; color: var(--gold); font-weight: 900;">⚽ GANZENBORD</h1>
-    <p style="opacity: 0.8; max-width: 340px; font-size: 0.95rem;">Kies de rol van dit apparaat:</p>
+    <h1 style="font-size: 2.2rem; color: var(--gold); font-weight: 900;">⚽ GANZENBORD 63</h1>
+    <p style="opacity: 0.85; max-width: 340px; font-size: 0.95rem; text-align: center;">Kies de rol van dit apparaat:</p>
     
     <button class="btn btn-green" style="width: 100%; max-width: 320px;" onclick="initTV()">
       📺 1. Tablet / TV Weergave
@@ -51,7 +51,7 @@
       <div class="camera-box">
         <video id="camera-stream" autoplay playsinline muted></video>
         <img id="selfie-preview" style="display: none;" alt="Selfie">
-        <canvas id="selfie-canvas" width="200" height="200" style="display: none;"></canvas>
+        <canvas id="selfie-canvas" width="220" height="220" style="display: none;"></canvas>
       </div>
 
       <div style="display: flex; gap: 8px;">
@@ -69,7 +69,7 @@
       <input type="file" id="file-selfie-input" accept="image/*" capture="user" style="display: none;" onchange="handleFileSelfie(event)">
 
       <button class="btn btn-green" id="btn-join-game" style="width: 100%; padding: 12px;" onclick="submitPlayerJoin()">
-        ✅ Naar Kleedkamer
+        ✅ Naar de Dugout
       </button>
     </div>
   </div>
@@ -93,12 +93,26 @@
       <div class="pitch-center-circle"></div>
       <div class="pitch-midline"></div>
 
+      <!-- SPIRAAL SPEELBORD (9x7 = 63 VAKJES) -->
       <div id="board-grid"></div>
 
+      <!-- RECHTER KOLOM: LEGENDA + STAND -->
       <div class="tv-sidebar">
-        <div class="sidebar-title">📊 Stand op het Veld</div>
+        <div class="sidebar-title">📊 Stand tot Doel (63)</div>
         <div class="leaderboard-list" id="tv-leaderboard"></div>
-        <div style="margin-top: auto; font-size: 0.75rem; opacity: 0.5; text-align: center;">
+
+        <div class="sidebar-title" style="margin-top: 4px; font-size: 0.75rem;">🗂️ Categorieën</div>
+        <div class="cat-legend">
+          <span>🇷🇴 Roemenië</span>
+          <span>🌍 Het WK</span>
+          <span>🎬 Video/Audio</span>
+          <span>📸 Foto</span>
+          <span>⚽ Algemeen</span>
+          <span>🪪 Paspoort</span>
+          <span>💰 Transfers</span>
+        </div>
+
+        <div style="margin-top: auto; font-size: 0.75rem; opacity: 0.65; text-align: center;">
           Kamer Code: <span id="tv-room-code-badge" style="color:var(--gold); font-weight:900;">----</span>
         </div>
       </div>
@@ -107,18 +121,19 @@
     <!-- TV LOBBY OVERLAY -->
     <div id="tv-lobby-overlay" class="tv-overlay">
       <div class="overlay-box">
-        <h1 style="color: var(--gold); font-size: 2.2rem;">⚽ KLEEDKAMER LOBBY</h1>
+        <h1 style="color: var(--gold); font-size: 2.2rem;">⚽ DUGOUT & KLEEDKAMER</h1>
         <p style="font-size: 1.05rem; opacity: 0.85;">Ga op je telefoon naar de site en vul de kamercode in:</p>
         <div id="tv-room-code" class="room-code-display">....</div>
+        <div id="tv-csv-status" style="font-size: 0.8rem; color: #10b981; font-weight: 700;">Vragenlijst inladen...</div>
         
-        <div style="width: 100%; margin-top: 10px;">
+        <div style="width: 100%; margin-top: 6px;">
           <h3 style="font-size: 0.95rem; text-transform: uppercase; margin-bottom: 10px; opacity: 0.7;" id="tv-lobby-count">
             Verbonden Spelers (0)
           </h3>
           <div class="lobby-players-grid" id="tv-lobby-players"></div>
         </div>
 
-        <div id="tv-lobby-msg" style="margin-top: 8px; color: var(--gold); font-weight: 700;">
+        <div id="tv-lobby-msg" style="margin-top: 6px; color: var(--gold); font-weight: 700;">
           Wachten tot de Scheidsrechter het spel start...
         </div>
       </div>
@@ -162,23 +177,34 @@
       </div>
     </div>
 
-    <!-- TV CATEGORIE + VRAAG + RESULTAAT OVERLAY -->
+    <!-- TV SPECIAAL VAKJE OVERLAY -->
+    <div id="tv-special-overlay" class="tv-overlay" style="display: none;">
+      <div class="overlay-box">
+        <div id="tv-spec-icon" style="font-size: 4.5rem;">🚨</div>
+        <h1 id="tv-spec-title" style="color: var(--gold); font-size: 2.2rem;">SPECIAAL VAKJE!</h1>
+        <p id="tv-spec-desc" style="font-size: 1.4rem; font-weight: 800; line-height: 1.4;"></p>
+        <div id="tv-spec-sub" style="font-size: 1rem; opacity: 0.8; margin-top: 8px;">Wachten op de Scheidsrechter...</div>
+      </div>
+    </div>
+
+    <!-- TV VRAAG / KOPDUEL / MEDIA OVERLAY -->
     <div id="tv-question-overlay" class="tv-overlay" style="display: none;">
       <div class="overlay-box">
         <div id="tv-q-cat" class="cat-pill">Categorie</div>
 
-        <!-- STRAF & BELONING BOX -->
         <div class="stakes-row">
-          <div class="stake-pill stake-good" id="tv-stake-good">✅ Goed: Deel 2 slokken uit</div>
-          <div class="stake-pill stake-bad" id="tv-stake-bad">❌ Fout: Neem 2 slokken</div>
+          <div class="stake-pill stake-good" id="tv-stake-good">✅ Goed: Deel 3 slokken uit</div>
+          <div class="stake-pill stake-bad" id="tv-stake-bad">❌ Fout: Neem 3 slokken</div>
         </div>
 
-        <!-- VRAAGTEKST (PAS ZICHTBAAR NA 'SHOW VRAAG') -->
-        <h2 id="tv-q-text" style="font-size: 1.65rem; font-weight: 800; line-height: 1.3; display: none;">
+        <h2 id="tv-q-text" style="font-size: 1.55rem; font-weight: 800; line-height: 1.3; display: none;">
           Vraagtekst...
         </h2>
 
-        <!-- RESULTAAT WEERGAVE OP TV (PAS ZICHTBAAR NA 'SHOW RESULTAAT') -->
+        <!-- MEDIA CONTAINER VOOR FOTO, AUDIO OF VIDEO -->
+        <div id="tv-media-box" style="display: none; width: 100%; max-height: 300px; justify-content: center; align-items: center;"></div>
+
+        <!-- RESULTAAT WEERGAVE OP TV -->
         <div id="tv-result-box" style="display: none; width: 100%; flex-direction: column; gap: 10px; margin-top: 6px;"></div>
 
         <div id="tv-q-status" style="font-size: 1.05rem; color: var(--gold); font-weight: 700;">
@@ -191,20 +217,23 @@
   <!-- 3. MOBIEL: SPELER WEERGAVE (NO-SCROLL FULLSCREEN) -->
   <div id="mobile-view" class="mobile-fullscreen" style="display: none;">
     <div class="m-header">
-      <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
         <img id="m-header-avatar" src="" class="avatar-small" alt="Avatar">
         <div>
-          <div id="m-player-name" style="font-weight: 900; font-size: 1.15rem;">Speler</div>
-          <div id="m-tile-info" style="font-size: 0.8rem; opacity: 0.85; display: none;">Vak 1</div>
+          <div id="m-player-name" style="font-weight: 900; font-size: 1.1rem;">Speler</div>
+          <div id="m-tile-info" style="font-size: 0.78rem; opacity: 0.85; display: none;">Vak 1</div>
         </div>
+      </div>
+      <div id="m-var-badge" style="display: none; font-size: 0.72rem; background: rgba(245, 158, 11, 0.2); border: 1px solid var(--gold); color: var(--gold); padding: 4px 8px; border-radius: 8px; font-weight: 800;">
+        🍺 VAR: 1x
       </div>
     </div>
 
     <div class="m-body-center">
-      <!-- 1. IN DE KLEEDKAMER -->
+      <!-- 1. IN DE DUGOUT -->
       <div id="m-lobby-card" class="m-card" style="text-align: center;">
-        <h3 style="color: var(--gold);">In de Kleedkamer</h3>
-        <p style="opacity: 0.8;">Je zit klaar! Kijk naar het scherm tot de scheidsrechter start.</p>
+        <h3 style="color: var(--gold);">In de Dugout</h3>
+        <p style="opacity: 0.8;">Je zit klaar! Kijk naar de TV tot de scheidsrechter het spel start.</p>
       </div>
 
       <!-- 2. WIEGELOOT GOOIEN -->
@@ -234,7 +263,7 @@
 
       <!-- 3. MIJN BEURT OM TE GOOIEN -->
       <div id="m-turn-card" class="m-card" style="display: none; text-align: center;">
-        <h2 style="color: var(--gold); font-size: 1.35rem;">Jij mag gooien!</h2>
+        <h2 style="color: var(--gold); font-size: 1.35rem;">Jij bent aan de beurt!</h2>
         <div class="dice-scene" style="width: 110px; height: 110px; margin: 10px auto;">
           <div class="dice-cube" id="m-turn-dice" style="transform: scale(0.72) rotateX(-15deg) rotateY(20deg);">
             <div class="cube-face face-1"><div class="pip"></div></div>
@@ -259,10 +288,10 @@
         </button>
       </div>
 
-      <!-- 4. WACHTSCHERM VOOR SPELERS -->
+      <!-- 4. WACHTSCHERM -->
       <div id="m-wait-turn-card" class="m-card" style="display: none; text-align: center;">
         <h3 id="m-wait-turn-text" style="color: var(--gold);">Even wachten...</h3>
-        <p id="m-wait-turn-sub" style="opacity: 0.75; font-size: 0.9rem;">Kijk naar het scherm op de TV.</p>
+        <p id="m-wait-turn-sub" style="opacity: 0.8; font-size: 0.95rem;">Kijk naar het bord op de TV.</p>
       </div>
 
       <!-- 5. ANTWOORD INVOEREN -->
@@ -276,11 +305,15 @@
         <div id="m-ans-status" style="font-size: 0.9rem; color: #10b981; font-weight: 800; text-align: center;"></div>
       </div>
 
-      <!-- 6. VOLLEDIG FELGROEN / FELROOD RESULTAATSCHERM -->
-      <div id="m-result-card" class="m-card" style="display: none; text-align: center; background: rgba(0,0,0,0.35); border: 2px solid #fff;">
+      <!-- 6. FELGROEN / FELROOD RESULTAAT + DRONKEN VAR KNOP -->
+      <div id="m-result-card" class="m-card" style="display: none; text-align: center; background: rgba(0,0,0,0.4); border: 2px solid #fff;">
         <div id="m-result-icon" style="font-size: 3.5rem;">✅</div>
         <h1 id="m-result-title" style="font-size: 2rem; font-weight: 900;">GOED!</h1>
         <p id="m-result-sub" style="font-size: 1.1rem; font-weight: 700;"></p>
+        
+        <button class="btn btn-yellow" id="m-btn-drunk-var" style="display: none; width: 100%; margin-top: 10px;" onclick="playerUseDrunkVar()">
+          🍺 Zet Dronken VAR in! (Maak GOED)
+        </button>
       </div>
     </div>
   </div>
@@ -289,10 +322,10 @@
   <div id="ref-view" class="mobile-fullscreen" style="display: none;">
     <div class="m-header" style="border-left: 6px solid var(--ref);">
       <div>
-        <div style="font-weight: 900; font-size: 1.1rem; color: var(--ref);">⚖️ DE SCHEIDSRECHTER</div>
-        <div style="font-size: 0.75rem; opacity: 0.75;" id="ref-status-sub">Kleedkamer Beheer</div>
+        <div style="font-weight: 900; font-size: 1.05rem; color: var(--ref);">⚖️ DE SCHEIDSRECHTER</div>
+        <div style="font-size: 0.72rem; opacity: 0.75;" id="ref-status-sub">Dugout Beheer</div>
       </div>
-      <button id="ref-top-cards-btn" class="btn btn-yellow" style="display: none; padding: 6px 10px; font-size: 0.75rem;" onclick="toggleRefPenaltyModal()">
+      <button id="ref-top-cards-btn" class="btn btn-yellow" style="display: none; padding: 6px 10px; font-size: 0.72rem;" onclick="toggleRefPenaltyModal()">
         🟨🟥 Kaart / Kick
       </button>
     </div>
@@ -310,48 +343,60 @@
       <!-- FASE 2: WIEGELOOT CONTROLE -->
       <div id="ref-wiegeloot-card" class="m-card" style="display: none; text-align: center;">
         <h3 style="color: var(--gold);">🎲 Startvolgorde Gooien</h3>
-        <p id="ref-wiegeloot-status" style="font-size: 0.9rem; opacity: 0.85;">Wachten tot alle spelers hebben gegooid...</p>
+        <p id="ref-wiegeloot-status" style="font-size: 0.88rem; opacity: 0.85;">Wachten tot alle spelers hebben gegooid...</p>
         <div id="ref-wiegeloot-list" class="scroll-box"></div>
         <button class="btn btn-green" id="ref-btn-to-board-initial" style="width: 100%; display: none;" onclick="refGoToBoardInitial()">
           🏟️ Naar Bord
         </button>
       </div>
 
-      <!-- FASE 3: BORD CONTROLE (VOLGENDE SPELER LATEN GOOIEN) -->
+      <!-- FASE 3: BORD CONTROLE (VOLGENDE SPELER) -->
       <div id="ref-board-card" class="m-card" style="display: none; text-align: center;">
-        <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--gold); font-weight: 800;">Spelbord Actief</div>
-        <h2 id="ref-next-player-title" style="font-size: 1.4rem;">Volgende: Speler</h2>
-        <p id="ref-board-sub" style="font-size: 0.9rem; opacity: 0.8;">Geef het startsein wanneer de speler mag dobbelen.</p>
-        <button class="btn btn-green" id="ref-btn-allow-roll" style="width: 100%; font-size: 1.15rem;" onclick="refAllowPlayerRoll()">
+        <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--gold); font-weight: 800;">Spelbord Actief</div>
+        <h2 id="ref-next-player-title" style="font-size: 1.35rem;">Volgende: Speler</h2>
+        <p id="ref-board-sub" style="font-size: 0.88rem; opacity: 0.85;">Geef het startsein wanneer de speler mag gooien.</p>
+        <button class="btn btn-green" id="ref-btn-allow-roll" style="width: 100%; font-size: 1.1rem;" onclick="refAllowPlayerRoll()">
           🎲 Laat Speler Gooien
         </button>
+        <button class="btn btn-yellow" id="ref-btn-skip-turn" style="width: 100%; font-size: 1.05rem; display: none;" onclick="refConfirmSkipTurn()">
+          ⏭️ Beurt Overslaan & Volgende
+        </button>
+      </div>
+
+      <!-- FASE 3B: SPECIAAL VAKJE AFHANDELEN -->
+      <div id="ref-special-card" class="m-card" style="display: none; text-align: center;">
+        <div id="ref-spec-badge" class="cat-pill" style="align-self: center;">Speciaal Vakje</div>
+        <h3 id="ref-spec-title" style="color: var(--gold);">Gebeurtenis</h3>
+        <p id="ref-spec-desc" style="font-size: 0.92rem; line-height: 1.35;"></p>
+        <div id="ref-spec-buttons" style="display: flex; flex-direction: column; gap: 8px; width: 100%;"></div>
       </div>
 
       <!-- FASE 4: SPELER GELAND -> SHOW VRAAG -->
       <div id="ref-pre-question-card" class="m-card" style="display: none; text-align: center;">
         <div id="ref-pre-cat" class="cat-pill" style="align-self: center;">Categorie</div>
         <h3 id="ref-pre-title">Speler staat op het vakje!</h3>
-        <p style="font-size: 0.85rem; opacity: 0.8;">Op de TV staan nu de categorie en de straf/beloning.</p>
-        <div class="secret-ans-box" style="text-align: left; font-size: 0.85rem;">
-          <div style="opacity: 0.75; font-size: 0.7rem;">KOMENDE VRAAG:</div>
+        <div class="secret-ans-box" style="text-align: left; font-size: 0.82rem;">
+          <div style="opacity: 0.75; font-size: 0.68rem;">KOMENDE VRAAG:</div>
           <div id="ref-preview-q">...</div>
+          <div style="opacity: 0.75; font-size: 0.68rem; margin-top: 6px;">ANTWOORD:</div>
+          <div id="ref-preview-a" style="color: #fff;">...</div>
         </div>
-        <button class="btn btn-yellow" style="width: 100%; font-size: 1.15rem;" onclick="refShowQuestion()">
+        <button class="btn btn-yellow" style="width: 100%; font-size: 1.1rem;" onclick="refShowQuestion()">
           📺 Show Vraag
         </button>
       </div>
 
-      <!-- FASE 5: ANTWOORDEN BEOORDELEN + SHOW RESULTAAT + NAAR BORD -->
+      <!-- FASE 5: REGULIERE / GROEPSVRAAG BEOORDELEN -->
       <div id="ref-judge-card" class="m-card" style="display: none;">
         <div style="font-size: 0.75rem; color: var(--gold); text-transform: uppercase; font-weight: 800;" id="ref-q-active-cat">Vraag Actief</div>
-        <p id="ref-q-text" style="font-weight: 700; font-size: 0.95rem;"></p>
+        <p id="ref-q-text" style="font-weight: 700; font-size: 0.9rem;"></p>
         
-        <div class="secret-ans-box" style="padding: 10px;">
-          <span style="font-size: 0.7rem; text-transform: uppercase; display: block; opacity: 0.8;">Geheim Antwoord:</span>
-          <span id="ref-q-secret-ans" style="font-size: 0.95rem;">...</span>
+        <div class="secret-ans-box" style="padding: 8px 10px;">
+          <span style="font-size: 0.68rem; text-transform: uppercase; display: block; opacity: 0.8;">Geheim Antwoord:</span>
+          <span id="ref-q-secret-ans" style="font-size: 0.92rem;">...</span>
         </div>
 
-        <div id="ref-answers-list" class="scroll-box" style="max-height: 150px;"></div>
+        <div id="ref-answers-list" class="scroll-box" style="max-height: 140px;"></div>
         
         <button class="btn btn-yellow" id="ref-btn-show-result" style="width: 100%; display: none;" onclick="refShowResult()">
           📢 Show Resultaat
@@ -361,21 +406,29 @@
         </button>
       </div>
 
-      <!-- POPUP VOOR KAARTEN & KICKEN TIJDENS SPEL -->
+      <!-- FASE 5B: KOPDUEL BEOORDELEN -->
+      <div id="ref-kopduel-card" class="m-card" style="display: none;">
+        <div style="font-size: 0.78rem; color: var(--gold); text-transform: uppercase; font-weight: 800;">💥 KOPDUEL INSCHATTINGSVRAAG</div>
+        <p id="ref-kd-text" style="font-weight: 700; font-size: 0.9rem;"></p>
+        <div class="secret-ans-box" style="padding: 8px 10px;">
+          <span style="font-size: 0.68rem; text-transform: uppercase; display: block; opacity: 0.8;">Juiste Getal / Antwoord:</span>
+          <span id="ref-kd-secret-ans" style="font-size: 0.95rem;">...</span>
+        </div>
+        <div id="ref-kd-answers" class="scroll-box" style="max-height: 110px;"></div>
+        <div id="ref-kd-actions" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        <button class="btn btn-blue" id="ref-kd-to-board" style="width: 100%; display: none;" onclick="refBackToBoard()">
+          🏟️ Naar Bord
+        </button>
+      </div>
+
+      <!-- POPUP VOOR KAARTEN & KICKEN -->
       <div id="ref-penalty-modal" class="m-card" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <h4 style="color: var(--gold);">⚡ Kaarten & Spelersbeheer</h4>
           <button class="btn btn-blue" style="padding: 4px 10px; font-size: 0.75rem;" onclick="toggleRefPenaltyModal()">Sluit</button>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button class="btn btn-yellow" style="color: #000; font-size: 0.8rem; padding: 10px;" onclick="refCardPenalty('geel')">
-            🟨 Gele Kaart
-          </button>
-          <button class="btn btn-red" style="font-size: 0.8rem; padding: 10px;" onclick="refCardPenalty('rood')">
-            🟥 Rode Kaart
-          </button>
-        </div>
-        <div id="ref-active-player-list" class="scroll-box" style="max-height: 160px;"></div>
+        <p style="font-size: 0.75rem; opacity: 0.8;">Geel = 5 slokken | 2e Geel = 1 beurt + Atje | Rood = 2 beurten + Atje</p>
+        <div id="ref-active-player-list" class="scroll-box" style="max-height: 210px;"></div>
       </div>
     </div>
   </div>
