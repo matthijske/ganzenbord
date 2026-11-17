@@ -1,17 +1,67 @@
-﻿Categorie;Type;Media;Vraag;Antwoord;Beloning;Straf;Groepsvraag
-algemeen;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-algemeen;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-foto;foto;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-foto;foto;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-kopduel;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Winnaar +1 vak;Verliezer 3 slokken;JA
-kopduel;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Winnaar +1 vak;Verliezer 3 slokken;JA
-paspoort;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-paspoort;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-roemenie;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-roemenie;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-transfers;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-transfers;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-video_audio;audio;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-video_audio;video;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-wk;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
-wk;tekst;media/obama.png;Welke 2 personen zie je hier?;Wesley Sneijder en Barack Obama;Deel 3 slokken uit;Neem 3 slokken;JA
+﻿Categorie;Prioriteit;Type;Media;Vraag;Antwoord;Antwoord_Type;Antwoord_Media;Beloning;Straf;Groepsvraag
+paspoort;2;foto;media/paspoort/beckham.png;Wie ben ik?;David Beckham;foto;media/paspoort/beckham.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;foto;media/paspoort/biereth.png;Wie ben ik?;Mika Biereth;foto;media/paspoort/biereth.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;foto;media/paspoort/bokila.png;Wie ben ik?;Jeremy Bokila;foto;media/paspoort/bokila.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;foto;media/paspoort/bony.png;Wie ben ik?;Wilfried Bony;foto;media/paspoort/bony.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;foto;media/paspoort/boulahrouz.png;Wie ben ik?;Khalid Boulahrouz;foto;media/paspoort/boulahrouz.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;1;foto;media/paspoort/bronckhorst.png;Wie ben ik?;Giovanni van Bronckhorst;foto;media/paspoort/bronckhorst.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;foto;media/paspoort/chiesa.png;Wie ben ik?;Federico Chiesa;foto;media/paspoort/chiesa.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;1;foto;media/paspoort/clement.png;Wie ben ik?;Pelle Clement;foto;media/paspoort/clement.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;foto;media/paspoort/depaul.png;Wie ben ik?;Rodrigo De Paul;foto;media/paspoort/depaul.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;foto;media/paspoort/dimaria.png;Wie ben ik?;Angel Di Maria;foto;media/paspoort/dimaria.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;1;foto;media/paspoort/elghazi.png;Wie ben ik?;Anwar El Ghazi;foto;media/paspoort/elghazi.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;1;foto;media/paspoort/gaari.png;Wie ben ik?;Juriën Gaari;foto;media/paspoort/gaari.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;foto;media/paspoort/gnabry.png;Wie ben ik?;Serge Gnabry;foto;media/paspoort/gnabry.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;foto;media/paspoort/griezmann.png;Wie ben ik?;Antoine Griezmann;foto;media/paspoort/griezmann.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;foto;media/paspoort/gyokeres.png;Wie ben ik?;Viktor Gyökeres;foto;media/paspoort/gyokeres.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;1;foto;media/paspoort/hansson.png;Wie ben ik?;Emil Hansson;foto;media/paspoort/hansson.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;foto;media/paspoort/hazard.png;Wie ben ik?;Eden Hazard;foto;media/paspoort/hazard.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;2;foto;media/paspoort/henry.png;Wie ben ik?;Thierry Henry;foto;media/paspoort/henry.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;2;foto;media/paspoort/kluivert.png;Wie ben ik?;Patrick Kluivert;foto;media/paspoort/kluivert.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;2;foto;media/paspoort/kolomuani.png;Wie ben ik?;Randal Kolo Muani;foto;media/paspoort/kolomuani.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;2;foto;media/paspoort/kroos.png;Wie ben ik?;Toni Kroos;foto;media/paspoort/kroos.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;foto;media/paspoort/krul.png;Wie ben ik?;Tim Krul;foto;media/paspoort/krul.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;foto;media/paspoort/lamprou.png;Wie ben ik?;Konstantinos Lamprou;foto;media/paspoort/lamprou.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;2;foto;media/paspoort/leemans.png;Wie ben ik?;Clint Leemans;foto;media/paspoort/leemans.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;2;foto;media/paspoort/linssen.png;Wie ben ik?;Bryan Linssen;foto;media/paspoort/linssen.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;foto;media/paspoort/lobete.png;Wie ben ik?;Julen Lobete;foto;media/paspoort/lobete.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;foto;media/paspoort/man.png;Wie ben ik?;Dennis Man;foto;media/paspoort/man.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;1;foto;media/paspoort/meijers.png;Wie ben ik?;Aaron Meijers;foto;media/paspoort/meijers.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;2;foto;media/paspoort/misidjan.png;Wie ben ik?;Virgil Misidjan;foto;media/paspoort/misidjan.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;1;foto;media/paspoort/mitroglu.png;Wie ben ik?;Konstantinos Mitroglou;foto;media/paspoort/mitroglu.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;2;foto;media/paspoort/morata.png;Wie ben ik?;Álvaro Morata;foto;media/paspoort/morata.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;2;foto;media/paspoort/navas.png;Wie ben ik?;Keylor Navas;foto;media/paspoort/navas.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;2;foto;media/paspoort/nkunku.png;Wie ben ik?;Christopher Nkunku;foto;media/paspoort/nkunku.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;1;foto;media/paspoort/odgaard.png;Wie ben ik?;Jens Odgaard;foto;media/paspoort/odgaard.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;1;foto;media/paspoort/olise.png;Wie ben ik?;Michael Olise;foto;media/paspoort/olise.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;2;foto;media/paspoort/olmo.png;Wie ben ik?;Dani Olmo;foto;media/paspoort/olmo.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;2;foto;media/paspoort/oosting.png;Wie ben ik?;Thijs Oosting;foto;media/paspoort/oosting.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;2;foto;media/paspoort/pavard.png;Wie ben ik?;Benjamin Pavard;foto;media/paspoort/pavard.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;1;foto;media/paspoort/pereiro.png;Wie ben ik?;Gastón Pereiro;foto;media/paspoort/pereiro.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;2;foto;media/paspoort/pogba.png;Wie ben ik?;Paul Pogba;foto;media/paspoort/pogba.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;2;foto;media/paspoort/rabiot.png;Wie ben ik?;Adrien Rabiot;foto;media/paspoort/rabiot.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;2;foto;media/paspoort/rodriguez.png;Wie ben ik?;James Rodríguez;foto;media/paspoort/rodriguez.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;1;foto;media/paspoort/roemeratoe.png;Wie ben ik?;Godfried Roemeratoe;foto;media/paspoort/roemeratoe.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;1;foto;media/paspoort/ruiz.png;Wie ben ik?;Bryan Ruiz;foto;media/paspoort/ruiz.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;2;foto;media/paspoort/seedorf.png;Wie ben ik?;Clarence Seedorf;foto;media/paspoort/seedorf.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;2;foto;media/paspoort/shaqiri.png;Wie ben ik?;Xherdan Shaqiri;foto;media/paspoort/shaqiri.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;1;foto;media/paspoort/silva.png;Wie ben ik?;Fábio Silva;foto;media/paspoort/silva.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;1;foto;media/paspoort/tahiri.png;Wie ben ik?;Anas Tahiri;foto;media/paspoort/tahiri.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;1;foto;media/paspoort/vandewiel.png;Wie ben ik?;Gregory van de Wiel;foto;media/paspoort/vandewiel.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;1;foto;media/paspoort/zoet.png;Wie ben ik?;Jeroen Zoet;foto;media/paspoort/zoet.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;1;tekst;;Welke Roemeense club won in 1986 de Europacup 1 door FC Barcelona na penalty's te verslaan?;Steaua Boekarest (keeper Duckadam stopte 4 penalty's);video;media/roemenie/steaua_1986.mp4;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;foto;media/roemenie/hagi_jeugd.jpg;Welke Roemeense legende zie je hier op jonge leeftijd?;Gheorghe Hagi;tekst;;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;tekst;;In welk jaar en gastland werd het allereerste WK voetbal georganiseerd en gewonnen door het gastland?;1930 in Uruguay;foto;media/wk/uruguay_1930.jpg;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;2;video;media/wk/zidane_2006.mp4;Bekijk de opbouw van dit moment uit de WK-finale van 2006. Wat gebeurt er enkele seconden later?;Zinedine Zidane geeft een kopstoot aan Marco Materazzi en krijgt rood;video;media/wk/zidane_kopstoot.mp4;Deel 3 slokken uit;Neem 3 slokken;JA
+video_audio;1;audio;media/video_audio/bergkamp_1998.mp3;Luister naar het legendarische radiofragment van Jack van Gelder. Wie scoorde deze goal en tegen welk land?;Dennis Bergkamp (tegen Argentinië op het WK 1998);video;media/video_audio/bergkamp_goal.mp4;Deel 3 slokken uit;Neem 3 slokken;JA
+video_audio;2;video;media/video_audio/panenka_1976.mp4;Welke speler introduceerde deze iconische strafschopvariant in de EK-finale van 1976?;Antonín Panenka (Tsjecho-Slowakije);tekst;;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;1;foto;media/foto/robben_blur.jpg;Welke oud-international staat hier onherkenbaar gemaakt op deze wedstrijdfoto?;Arjen Robben;foto;media/foto/robben_origineel.jpg;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;2;foto;media/foto/zoek_de_bal.jpg;Bekijk deze actiefoto goed. Waar bevindt de bal zich op dit moment (links, midden of rechts)?;Rechtsboven in de hoek;foto;media/foto/zoek_de_bal_oplossing.jpg;Deel 3 slokken uit;Neem 3 slokken;JA
+algemeen;1;tekst;;Welke club slaagde er als enige in om de UEFA Champions League drie keer op rij te winnen (2016, 2017 en 2018)?;Real Madrid;foto;media/algemeen/real_3peat.jpg;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;2;audio;media/algemeen/cl_hymne.mp3;In welke drie talen wordt de officiële UEFA Champions League-hymne gezongen?;Engels, Frans en Duits;tekst;;Deel 3 slokken uit;Neem 3 slokken;JA
+paspoort;1;tekst;;Spelerspaspoort: Dinamo Zagreb -> RB Leipzig -> FC Barcelona. Wie ben ik?;Dani Olmo;foto;media/spelerspaspoorten/olmo.jpg;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;tekst;;Spelerspaspoort: Arsenal -> RKC Waalwijk (huur) -> Motherwell (huur) -> Sturm Graz -> AS Monaco. Wie ben ik?;Mika Biereth;foto;media/spelerspaspoorten/biereth.jpg;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;1;tekst;;Voor welk recordbedrag (in miljoenen euro's) maakte Neymar in 2017 de overstap van FC Barcelona naar PSG?;222 miljoen euro;foto;media/transfers/neymar_psg.jpg;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;2;tekst;;Welke verdediger werd in 2019 de duurste Nederlandse transfer ooit toen hij voor 85,5 miljoen van Ajax naar Juventus vertrok?;Matthijs de Ligt;tekst;;Deel 3 slokken uit;Neem 3 slokken;NEE
+kopduel;1;tekst;;Inschattingsvraag: Hoeveel officiële interlands speelde Gheorghe Hagi in totaal voor het Roemeense nationale elftal?;124 interlands;tekst;;Winnaar +1 vak;Verliezer 3 slokken;JA
+kopduel;2;tekst;;Inschattingsvraag: In welk jaar werd de allereerste gele en rode kaart officieel geïntroduceerd op een WK voetbal?;1970 (WK in Mexico);foto;media/kopduel/wk_1970_kaart.jpg;Winnaar +1 vak;Verliezer 3 slokken;JA
