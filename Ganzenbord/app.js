@@ -1,7 +1,7 @@
-/* KLEUREN VOOR DEELNEMERS */
 const PLAYER_COLORS = ['#ef4444', '#3b82f6', '#eab308', '#22c55e', '#ec4899', '#06b6d4', '#f97316'];
 let PLAYERS = [];
 let gameStarted = false;
+let freePlayMode = false;
 
 let turnOrder = [];
 let currentTurnIndex = 0;
@@ -9,9 +9,8 @@ let pendingRoll = 0;
 let currentQ = null;
 let receivedAnswers = {};
 let roundVerdicts = {};
-let activeKopduel = null; // { p1Id, p2Id }
+let activeKopduel = null;
 
-/* 3D DOBBELSTEEN ROTATIES */
 const DICE_ROTATIONS = {
   1: { x: 0, y: 0 },
   6: { x: 0, y: 180 },
@@ -21,18 +20,16 @@ const DICE_ROTATIONS = {
   4: { x: 90, y: 0 }
 };
 
-/* DE 7 DEFINITIEVE CATEGORIEËN */
 const CATEGORIES = [
-  { id: 'roemenie',    name: '🇷🇴 Roemenië',       short: 'Roemenië',  icon: '🇷🇴' },
-  { id: 'wk',          name: '🌍 Het WK',          short: 'Het WK',    icon: '🌍' },
-  { id: 'video_audio', name: '🎬 Video & Audio',   short: 'Media',     icon: '🎬' },
-  { id: 'foto',        name: '📸 Foto',            short: 'Foto',      icon: '📸' },
-  { id: 'algemeen',    name: '⚽ Algemeen',        short: 'Algemeen',  icon: '⚽' },
-  { id: 'paspoort',    name: '🪪 Spelerspaspoort', short: 'Paspoort',  icon: '🪪' },
-  { id: 'transfers',   name: '💰 Transferwaarde',  short: 'Transfers', icon: '💰' }
+  { id: 'roemenie',    name: '🇷🇴 Roemenië',       short: 'Roemenië',    icon: '🇷🇴' },
+  { id: 'wk',          name: '🌍 Het WK',          short: 'Het WK',      icon: '🌍' },
+  { id: 'video_audio', name: '🎬 Video & Audio',   short: 'Media',       icon: '🎬' },
+  { id: 'foto',        name: '📸 Foto',            short: 'Foto',        icon: '📸' },
+  { id: 'algemeen',    name: '⚽ Algemeen',        short: 'Algemeen',    icon: '⚽' },
+  { id: 'paspoort',    name: '🪪 Spelerspaspoort', short: 'Paspoort',    icon: '🪪' },
+  { id: 'marktwaarde', name: '💶 Marktwaarde',     short: 'Marktwaarde', icon: '💶' }
 ];
 
-/* DE 12 SPECIALE VAKJES OP HET 63-VAKS BORD */
 const SPECIAL_TILES = {
   1:  { type: 'start',   icon: '🛖', short: 'Dugout',        title: 'De Dugout (Start)', desc: 'Hier begint de wedstrijd!' },
   6:  { type: 'special', icon: '⚡', short: 'Counter -> 12', title: 'De Snelle Counter!', desc: 'Je snijdt door de defensie: vlieg direct door naar Vak 12 én deel 3 slokken uit!', action: 'JUMP', target: 12 },
@@ -48,7 +45,6 @@ const SPECIAL_TILES = {
   63: { type: 'finish',  icon: '🥅', short: 'DOEL & KANTINE',title: 'HET DOEL & DE KANTINESCHAAL!', desc: 'KAMPIOEN VAN HET WEEKEND!' }
 };
 
-/* BOUW DE 63 VAKJES */
 const BOARD_TILES = [];
 let normalCounter = 0;
 for (let i = 1; i <= 63; i++) {
@@ -68,7 +64,6 @@ for (let i = 1; i <= 63; i++) {
   }
 }
 
-/* SPIRAAL MATRIX BEREKENEN VOOR 9 KOLOMMEN x 7 RIJEN (= 63 VAKJES) */
 function computeSpiralCoordinates(cols, rows) {
   const coords = [];
   let top = 0, bottom = rows - 1, left = 0, right = cols - 1;
@@ -89,34 +84,30 @@ function computeSpiralCoordinates(cols, rows) {
   return coords;
 }
 
-/* STANDAARD BACKUP-VRAGEN + CSV INLADEN */
 let QUESTION_POOLS = {
   roemenie: [
-    { cat: 'roemenie', type: 'tekst', media: '', q: 'Welke Roemeense club won in 1986 de Europacup 1 door FC Barcelona na penalty\'s te verslaan?', a: 'Steaua Boekarest', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false },
-    { cat: 'roemenie', type: 'tekst', media: '', q: 'Welke Roemeense legende stond bekend als "De Maradona van de Karpaten"?', a: 'Gheorghe Hagi', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
+    { cat: 'roemenie', priority: 1, type: 'tekst', media: '', q: 'Welke Roemeense club won in 1986 de Europacup 1 door FC Barcelona na penalty\'s te verslaan?', a: 'Steaua Boekarest', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
   ],
   wk: [
-    { cat: 'wk', type: 'tekst', media: '', q: 'In welk Zuid-Amerikaans land werd in 1930 het allereerste WK voetbal georganiseerd?', a: 'Uruguay', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false },
-    { cat: 'wk', type: 'tekst', media: '', q: 'Wie scoorde in de verlenging van de WK-finale van 2014 de winnende goal voor Duitsland?', a: 'Mario Götze', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
+    { cat: 'wk', priority: 1, type: 'tekst', media: '', q: 'In welk Zuid-Amerikaans land werd in 1930 het allereerste WK voetbal georganiseerd?', a: 'Uruguay', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
   ],
   video_audio: [
-    { cat: 'video_audio', type: 'tekst', media: '', q: 'Maak het legendarische commentaar van Jack van Gelder in 1998 af: "DENNIS BERGKAMP! DENNIS BERGKAMP! ..."', a: 'BERRRGKAMP!', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: true }
+    { cat: 'video_audio', priority: 1, type: 'tekst', media: '', q: 'Maak het legendarische commentaar van Jack van Gelder in 1998 af: "DENNIS BERGKAMP! DENNIS BERGKAMP! ..."', a: 'BERRRGKAMP!', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: true }
   ],
   foto: [
-    { cat: 'foto', type: 'tekst', media: '', q: 'Welke Braziliaanse spits droeg tijdens het WK 2002 het iconische driehoekje voorop zijn verder kale hoofd?', a: 'Ronaldo (R9)', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
+    { cat: 'foto', priority: 1, type: 'tekst', media: '', q: 'Welke Braziliaanse spits droeg tijdens het WK 2002 het iconische driehoekje voorop zijn verder kale hoofd?', a: 'Ronaldo (R9)', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
   ],
   algemeen: [
-    { cat: 'algemeen', type: 'tekst', media: '', q: 'Welke club won de Champions League drie keer op rij tussen 2016 en 2018?', a: 'Real Madrid', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
+    { cat: 'algemeen', priority: 1, type: 'tekst', media: '', q: 'Welke club won de Champions League drie keer op rij tussen 2016 en 2018?', a: 'Real Madrid', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
   ],
   paspoort: [
-    { cat: 'paspoort', type: 'tekst', media: '', q: 'Spelerspaspoort: FC Groningen -> PSV -> Chelsea -> Real Madrid -> Bayern München. Wie ben ik?', a: 'Arjen Robben', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
+    { cat: 'paspoort', priority: 1, type: 'tekst', media: '', q: 'Spelerspaspoort: FC Groningen -> PSV -> Chelsea -> Real Madrid -> Bayern München. Wie ben ik?', a: 'Arjen Robben', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
   ],
-  transfers: [
-    { cat: 'transfers', type: 'tekst', media: '', q: 'Voor welk recordbedrag (in miljoenen euro\'s) vertrok Neymar in 2017 van Barcelona naar PSG?', a: '222 miljoen euro', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
+  marktwaarde: [
+    { cat: 'marktwaarde', priority: 1, type: 'tekst', media: '', q: 'Voor welk recordbedrag (in miljoenen euro\'s) vertrok Neymar in 2017 van Barcelona naar PSG?', a: '222 miljoen euro', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
   ],
   kopduel: [
-    { cat: 'kopduel', type: 'tekst', media: '', q: 'Inschattingsvraag: In welk jaar werd de allereerste gele en rode kaart geïntroduceerd op een WK?', a: '1970', good: 'Winnaar +1 vak', bad: 'Verliezer 3 slokken', group: true },
-    { cat: 'kopduel', type: 'tekst', media: '', q: 'Inschattingsvraag: Hoeveel officiële interlands speelde Gheorghe Hagi voor Roemenië?', a: '124 interlands', good: 'Winnaar +1 vak', bad: 'Verliezer 3 slokken', group: true }
+    { cat: 'kopduel', priority: 1, type: 'tekst', media: '', q: 'Inschattingsvraag: Hoeveel officiële interlands speelde Gheorghe Hagi voor Roemenië?', a: '124 interlands', ansType: 'tekst', ansMedia: '', good: 'Winnaar +1 vak', bad: 'Verliezer 3 slokken', group: true }
   ]
 };
 let BACKUP_POOLS = JSON.parse(JSON.stringify(QUESTION_POOLS));
@@ -129,29 +120,44 @@ async function loadQuestionsFromCSV() {
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
     if (lines.length < 2) return;
 
-    const freshPools = { roemenie: [], wk: [], video_audio: [], foto: [], algemeen: [], paspoort: [], transfers: [], kopduel: [] };
+    const freshPools = { roemenie: [], wk: [], video_audio: [], foto: [], algemeen: [], paspoort: [], marktwaarde: [], kopduel: [] };
 
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(';');
-      if (cols.length < 5) continue;
-      const cat = cols[0].trim().toLowerCase();
-      const type = (cols[1] || 'tekst').trim().toLowerCase();
-      const media = (cols[2] || '').trim();
-      const q = (cols[3] || '').trim();
-      const a = (cols[4] || '').trim();
-      const good = (cols[5] || 'Deel 3 slokken uit').trim();
-      const bad = (cols[6] || 'Neem 3 slokken').trim();
-      const group = (cols[7] || 'NEE').trim().toUpperCase() === 'JA';
+      if (cols.length < 6) continue;
+      let cat = cols[0].trim().toLowerCase();
+      if (cat === 'transfers') cat = 'marktwaarde';
+
+      let priority = 2, type = 'tekst', media = '', q = '', a = '', ansType = 'tekst', ansMedia = '', good = 'Deel 3 slokken uit', bad = 'Neem 3 slokken', group = false;
+
+      if (cols.length >= 11) {
+        priority = parseInt((cols[1] || '2').trim(), 10) || 2;
+        type     = (cols[2] || 'tekst').trim().toLowerCase();
+        media    = (cols[3] || '').trim();
+        q        = (cols[4] || '').trim();
+        a        = (cols[5] || '').trim();
+        ansType  = (cols[6] || 'tekst').trim().toLowerCase();
+        ansMedia = (cols[7] || '').trim();
+        good     = (cols[8] || 'Deel 3 slokken uit').trim();
+        bad      = (cols[9] || 'Neem 3 slokken').trim();
+        group    = (cols[10] || 'NEE').trim().toUpperCase() === 'JA';
+      } else {
+        type  = (cols[1] || 'tekst').trim().toLowerCase();
+        media = (cols[2] || '').trim();
+        q     = (cols[3] || '').trim();
+        a     = (cols[4] || '').trim();
+        good  = (cols[5] || 'Deel 3 slokken uit').trim();
+        bad   = (cols[6] || 'Neem 3 slokken').trim();
+        group = (cols[7] || 'NEE').trim().toUpperCase() === 'JA';
+      }
 
       if (freshPools[cat] && q) {
-        freshPools[cat].push({ cat, type, media, q, a, good, bad, group });
+        freshPools[cat].push({ cat, priority, type, media, q, a, ansType, ansMedia, good, bad, group });
       }
     }
 
     Object.keys(freshPools).forEach(k => {
-      if (freshPools[k].length > 0) {
-        QUESTION_POOLS[k] = freshPools[k];
-      }
+      if (freshPools[k].length > 0) QUESTION_POOLS[k] = freshPools[k];
     });
     BACKUP_POOLS = JSON.parse(JSON.stringify(QUESTION_POOLS));
     const statusEl = document.getElementById('tv-csv-status');
@@ -162,20 +168,30 @@ async function loadQuestionsFromCSV() {
   }
 }
 
-/* TREK 1 UNIEKE VRAAG ZONDER HERHALING */
-function drawUniqueQuestion(catId) {
+function drawUniqueQuestion(catId, allowRefill = true) {
   let pool = QUESTION_POOLS[catId];
-  if (!pool || pool.length === 0) {
-    // Als alle vragen van deze categorie op zijn, hervul eenmalig vanuit backup
+  if ((!pool || pool.length === 0) && allowRefill) {
     QUESTION_POOLS[catId] = JSON.parse(JSON.stringify(BACKUP_POOLS[catId] || BACKUP_POOLS.algemeen));
     pool = QUESTION_POOLS[catId];
   }
-  const idx = Math.floor(Math.random() * pool.length);
-  const picked = pool.splice(idx, 1)[0];
+  if (!pool || pool.length === 0) return null;
+
+  const prio1Items = pool.filter(item => item.priority === 1);
+  const candidatePool = prio1Items.length > 0 ? prio1Items : pool;
+  const picked = candidatePool[Math.floor(Math.random() * candidatePool.length)];
+  const exactIndex = pool.indexOf(picked);
+  if (exactIndex > -1) pool.splice(exactIndex, 1);
   return picked;
 }
 
-/* PEERJS VARIABELEN */
+function getRemainingQuestionCounts() {
+  const counts = {};
+  [...CATEGORIES.map(c => c.id), 'kopduel'].forEach(id => {
+    counts[id] = QUESTION_POOLS[id] ? QUESTION_POOLS[id].length : 0;
+  });
+  return counts;
+}
+
 let peer = null;
 let connections = [];
 let clientConn = null;
@@ -188,9 +204,6 @@ function makeRoomCode() {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
-/* ========================================================
-   1. TABLET / TV MODUS
-   ======================================================== */
 function initTV() {
   myRole = 'tv';
   document.getElementById('view-select').style.display = 'none';
@@ -283,7 +296,7 @@ function updateTVLeaderboard() {
 
   document.getElementById('tv-leaderboard').innerHTML = sorted.map((p, idx) => {
     const dist = 63 - p.pos;
-    const isActive = p.id === activePlayerId;
+    const isActive = !freePlayMode && p.id === activePlayerId;
     const skipBadge = p.skipTurns > 0 ? ` • 🩼 ${p.skipTurns}x` : '';
     const yellowBadge = p.yellowCards > 0 ? ` • 🟨` : '';
     return `
@@ -300,29 +313,22 @@ function updateTVLeaderboard() {
   }).join('');
 }
 
-/* ========================================================
-   2. SPELER REGISTRATIE & SELFIE
-   ======================================================== */
 async function showPlayerSetup() {
   document.getElementById('view-select').style.display = 'none';
   document.getElementById('player-setup-view').style.display = 'flex';
-
   try {
     cameraStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'user', width: 250, height: 250 },
       audio: false
     });
     document.getElementById('camera-stream').srcObject = cameraStream;
-  } catch (err) {
-    console.warn("Camera fallback actief");
-  }
+  } catch (err) {}
 }
 
 function takeSelfie() {
   const video = document.getElementById('camera-stream');
   const canvas = document.getElementById('selfie-canvas');
   const ctx = canvas.getContext('2d');
-
   canvas.width = 180;
   canvas.height = 180;
   ctx.translate(180, 0);
@@ -334,7 +340,6 @@ function takeSelfie() {
   ctx.drawImage(video, sx, sy, size, size, 0, 0, 180, 180);
 
   mySelfieData = canvas.toDataURL('image/jpeg', 0.78);
-
   const preview = document.getElementById('selfie-preview');
   preview.src = mySelfieData;
   preview.style.display = 'block';
@@ -402,20 +407,12 @@ function submitPlayerJoin() {
   peer.on('open', () => {
     clientConn = peer.connect('gzb-' + code);
     clientConn.on('open', () => {
-      clientConn.send({
-        type: 'PLAYER_JOIN',
-        playerId: myPlayerId,
-        name: name,
-        selfie: mySelfieData
-      });
+      clientConn.send({ type: 'PLAYER_JOIN', playerId: myPlayerId, name, selfie: mySelfieData });
     });
     clientConn.on('data', handlePlayerIncomingData);
   });
 }
 
-/* ========================================================
-   3. SCHEIDSRECHTER LOGIN
-   ======================================================== */
 function showRefereeSetup() {
   document.getElementById('view-select').style.display = 'none';
   document.getElementById('ref-setup-view').style.display = 'flex';
@@ -440,9 +437,6 @@ function connectReferee() {
   renderRefPlayerLists();
 }
 
-/* ========================================================
-   TV DATA AFHANDELING & SPELVERLOOP
-   ======================================================== */
 function handleTVIncomingData(data, conn) {
   if (data.type === 'PLAYER_JOIN') {
     const assignedColor = PLAYER_COLORS[PLAYERS.length % PLAYER_COLORS.length];
@@ -464,6 +458,9 @@ function handleTVIncomingData(data, conn) {
   }
   else if (data.type === 'REF_JOIN') {
     broadcastToAll({ type: 'SYNC_PLAYERS', players: PLAYERS, gameStarted });
+    if (freePlayMode) {
+      broadcastToAll({ type: 'FREE_PLAY_CATEGORIES', counts: getRemainingQuestionCounts() });
+    }
   }
   else if (data.type === 'REF_KICK_PLAYER') {
     PLAYERS = PLAYERS.filter(p => p.id !== data.playerId);
@@ -539,7 +536,7 @@ function handleTVIncomingData(data, conn) {
   }
   else if (data.type === 'PLAYER_USE_DRUNK_VAR') {
     const p = PLAYERS.find(x => x.id === data.playerId);
-    if (p && p.drunkVarLeft && roundVerdicts[p.id]) {
+    if (p && p.drunkVarLeft && roundVerdicts[p.id] && !freePlayMode) {
       p.drunkVarLeft = false;
       roundVerdicts[p.id].correct = true;
       showSipAlert(`🍺 DRONKEN VAR INGEZET DOOR ${p.name.toUpperCase()}! Antwoord telt nu als GOED -> Deel 3 slokken uit!`);
@@ -553,9 +550,24 @@ function handleTVIncomingData(data, conn) {
   else if (data.type === 'REF_ADVANCE_TURN_TO_BOARD') {
     hideAllTVOverlays();
     stopTVMedia();
+    if (freePlayMode) {
+      broadcastToAll({ type: 'FREE_PLAY_CATEGORIES', counts: getRemainingQuestionCounts() });
+      return;
+    }
     currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
     updateTVLeaderboard();
     sendBoardWaitState();
+  }
+  else if (data.type === 'REF_START_FREE_PLAY') {
+    freePlayMode = true;
+    hideAllTVOverlays();
+    stopTVMedia();
+    updateTVLeaderboard();
+    broadcastToAll({ type: 'FREE_PLAY_CATEGORIES', counts: getRemainingQuestionCounts() });
+  }
+  else if (data.type === 'REF_SELECT_FREE_CAT') {
+    freePlayMode = true;
+    prepareFreePlayQuestionOnTV(data.catId);
   }
   else if (data.type === 'REF_GIVE_CARD') {
     applyCardPenaltyOnTV(data.playerId, data.cardType);
@@ -563,7 +575,7 @@ function handleTVIncomingData(data, conn) {
 }
 
 function hideAllTVOverlays() {
-  ['tv-lobby-overlay', 'tv-roll-order-overlay', 'tv-dice-overlay', 'tv-special-overlay', 'tv-question-overlay'].forEach(id => {
+  ['tv-lobby-overlay', 'tv-roll-order-overlay', 'tv-dice-overlay', 'tv-special-overlay', 'tv-question-overlay', 'tv-win-overlay'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -656,7 +668,6 @@ function animateDiceCube(elementId, targetValue, scaleVal, onFinish) {
   }, 130);
 }
 
-/* STAP VOOR STAP LOPEN + EXACT UITGOOIEN OP 63 (TERUGLOPEN + SLOKKEN PER STAP TE VEEL) */
 function executePlayerStepsWithBounce(playerId, steps) {
   document.getElementById('tv-dice-overlay').style.display = 'none';
   const player = PLAYERS.find(p => p.id === playerId);
@@ -701,24 +712,28 @@ function evaluateTileArrival(player) {
   if (player.pos === 63) {
     confetti({ particleCount: 250, spread: 100, origin: { y: 0.6 } });
     showSipAlert(`🏆 KAMPIOEN! ${player.name} staat in het Doel & de Kantine!`);
+    document.getElementById('tv-win-overlay').style.display = 'flex';
+    document.getElementById('tv-win-title').innerText = `🏆 ${player.name.toUpperCase()} HEEFT GEWONNEN!`;
+    broadcastToAll({
+      type: 'GAME_FINISHED_WIN',
+      winnerName: player.name,
+      counts: getRemainingQuestionCounts()
+    });
     return;
   }
 
-  // 1. CHECK OP KOPDUEL (ALS ER AL EEN ANDERE SPELER OP DIT VAKJE STAAT)
   const others = PLAYERS.filter(p => p.id !== player.id && p.pos === player.pos);
   if (others.length > 0) {
     startKopduelOnTV(player, others[0]);
     return;
   }
 
-  // 2. CHECK OP SPECIAAL VAKJE
   const tileObj = BOARD_TILES[player.pos - 1];
   if (tileObj.type === 'special') {
     showSpecialTileOnTV(player, tileObj);
     return;
   }
 
-  // 3. REGULIERE VRAAG VOORBEREIDEN
   prepareCategoryPreviewOnTV(player, tileObj);
 }
 
@@ -773,14 +788,13 @@ function resolveSpecialTileEffect(data) {
     }
   }
 
-  // Na een speciaal vakje gaat de beurt naar de volgende speler op het bord
   currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
   updateTVLeaderboard();
   sendBoardWaitState();
 }
 
-/* KOPDUEL OPZETTEN */
 function startKopduelOnTV(p1, p2) {
+  stopTVMedia();
   activeKopduel = { p1Id: p1.id, p2Id: p2.id, p1Name: p1.name, p2Name: p2.name };
   currentQ = drawUniqueQuestion('kopduel');
   receivedAnswers = {};
@@ -789,12 +803,14 @@ function startKopduelOnTV(p1, p2) {
   showSipAlert(`💥 KOPDUEL OP VAK ${p1.pos}: ${p1.name} vs ${p2.name}!`);
 
   document.getElementById('tv-question-overlay').style.display = 'flex';
+  document.getElementById('tv-stakes-row').style.display = 'flex';
   document.getElementById('tv-q-cat').innerText = `💥 KOPDUEL: ${p1.name} vs ${p2.name}`;
   document.getElementById('tv-stake-good').innerText = `🏆 Winnaar: 1 vakje vooruit`;
   document.getElementById('tv-stake-bad').innerText = `🍺 Verliezer: 3 slokken (Gelijk = Scheids Atje!)`;
   document.getElementById('tv-q-text').style.display = 'none';
   document.getElementById('tv-media-box').style.display = 'none';
   document.getElementById('tv-result-box').style.display = 'none';
+  document.getElementById('tv-answer-media-box').style.display = 'none';
   document.getElementById('tv-q-status').innerText = `Kopduel! Wachten tot de Scheidsrechter de inschattingsvraag toont...`;
 
   broadcastToAll({
@@ -805,13 +821,13 @@ function startKopduelOnTV(p1, p2) {
     categoryName: '💥 KOPDUEL',
     question: currentQ,
     isKopduel: true,
-    activeKopduel
+    activeKopduel,
+    freePlayMode: false
   });
 }
 
 function handleKopduelVerdictOnTV(data) {
   if (data.outcome === 'TIE') {
-    // Gelijkspel! Scheidsrechter moet een atje doen en er komt direct een nieuwe kopduel-vraag!
     const msg = `🍻 GELIJKSPEL IN HET KOPDUEL! De Scheidsrechter moet een ATJE trekken! Nieuwe vraag komt eraan...`;
     showSipAlert(msg);
     broadcastToAll({ type: 'SIP_ALERT', msg });
@@ -824,10 +840,11 @@ function handleKopduelVerdictOnTV(data) {
     return;
   }
 
-  // Winnaar bekend! Toon beide antwoorden + winnaar op het TV scherm
+  const qMediaBox = document.getElementById('tv-media-box');
+  if (qMediaBox) { qMediaBox.innerHTML = ''; qMediaBox.style.display = 'none'; }
+
   const winner = PLAYERS.find(x => x.id === data.winnerId);
   const loserId = data.winnerId === activeKopduel.p1Id ? activeKopduel.p2Id : activeKopduel.p1Id;
-  const loser = PLAYERS.find(x => x.id === loserId);
 
   const resBox = document.getElementById('tv-result-box');
   resBox.style.display = 'flex';
@@ -847,15 +864,14 @@ function handleKopduelVerdictOnTV(data) {
   }).join('');
 
   document.getElementById('tv-q-status').innerText = `Juiste antwoord: ${currentQ.a}`;
+  renderAnswerMediaOnTV();
 
-  // Verplaats winnaar 1 vakje vooruit
   if (winner && winner.pos < 63) {
     winner.pos += 1;
     renderTokens();
     updateTVLeaderboard();
   }
 
-  // Laat telefoons van de twee duellisten groen/rood kleuren
   const kdVerdicts = {};
   kdVerdicts[data.winnerId] = { ans: receivedAnswers[data.winnerId], correct: true };
   kdVerdicts[loserId] = { ans: receivedAnswers[loserId], correct: false };
@@ -865,26 +881,29 @@ function handleKopduelVerdictOnTV(data) {
     verdicts: kdVerdicts,
     goodText: 'Je wint het Kopduel en gaat 1 vakje vooruit!',
     badText: 'Kopduel verloren: Neem 3 slokken!',
-    isKopduel: true
+    isKopduel: true,
+    freePlayMode: false
   });
 
   activeKopduel = null;
 }
 
-/* REGULIERE VRAAG VOORBEREIDEN */
 function prepareCategoryPreviewOnTV(player, tileObj) {
+  stopTVMedia();
   activeKopduel = null;
   currentQ = drawUniqueQuestion(tileObj.cat);
   receivedAnswers = {};
   roundVerdicts = {};
 
   document.getElementById('tv-question-overlay').style.display = 'flex';
+  document.getElementById('tv-stakes-row').style.display = 'flex';
   document.getElementById('tv-q-cat').innerText = `${tileObj.catName} (Vak ${player.pos})${currentQ.group ? ' • 👥 GROEPSVRAAG' : ''}`;
   document.getElementById('tv-stake-good').innerText = `✅ Goed: ${currentQ.good}`;
   document.getElementById('tv-stake-bad').innerText = `❌ Fout: ${currentQ.bad}`;
   document.getElementById('tv-q-text').style.display = 'none';
   document.getElementById('tv-media-box').style.display = 'none';
   document.getElementById('tv-result-box').style.display = 'none';
+  document.getElementById('tv-answer-media-box').style.display = 'none';
   document.getElementById('tv-q-status').innerText = `${player.name} staat klaar op Vak ${player.pos}. Wachten op 'Show Vraag'...`;
 
   broadcastToAll({
@@ -894,7 +913,44 @@ function prepareCategoryPreviewOnTV(player, tileObj) {
     tileNum: player.pos,
     categoryName: tileObj.catName,
     question: currentQ,
-    isKopduel: false
+    isKopduel: false,
+    freePlayMode: false
+  });
+}
+
+function prepareFreePlayQuestionOnTV(catId) {
+  stopTVMedia();
+  activeKopduel = null;
+  currentQ = drawUniqueQuestion(catId, false);
+  if (!currentQ) {
+    broadcastToAll({ type: 'FREE_PLAY_CATEGORIES', counts: getRemainingQuestionCounts() });
+    return;
+  }
+  currentQ.group = true;
+  receivedAnswers = {};
+  roundVerdicts = {};
+
+  const catObj = CATEGORIES.find(c => c.id === catId) || { name: '💥 Kopduel' };
+
+  hideAllTVOverlays();
+  document.getElementById('tv-question-overlay').style.display = 'flex';
+  document.getElementById('tv-stakes-row').style.display = 'none';
+  document.getElementById('tv-q-cat').innerText = `${catObj.name} • 👥 GROEPSVRAAG`;
+  document.getElementById('tv-q-text').style.display = 'none';
+  document.getElementById('tv-media-box').style.display = 'none';
+  document.getElementById('tv-result-box').style.display = 'none';
+  document.getElementById('tv-answer-media-box').style.display = 'none';
+  document.getElementById('tv-q-status').innerText = `Vrije Quizmodus: Wachten op 'Show Vraag'...`;
+
+  broadcastToAll({
+    type: 'PLAYER_LANDED_PREVIEW',
+    playerId: '',
+    playerName: 'Iedereen',
+    tileNum: '-',
+    categoryName: catObj.name,
+    question: currentQ,
+    isKopduel: false,
+    freePlayMode: true
   });
 }
 
@@ -902,7 +958,6 @@ function revealQuestionOnTV() {
   document.getElementById('tv-q-text').style.display = 'block';
   document.getElementById('tv-q-text').innerText = currentQ.q;
 
-  // Toon foto, audio of video als dat in de CSV staat
   const mediaBox = document.getElementById('tv-media-box');
   mediaBox.innerHTML = '';
   if (currentQ.media && currentQ.type !== 'tekst') {
@@ -921,22 +976,46 @@ function revealQuestionOnTV() {
   const activePlayer = PLAYERS.find(p => p.id === turnOrder[currentTurnIndex]);
   document.getElementById('tv-q-status').innerText = activeKopduel
     ? `${activeKopduel.p1Name} & ${activeKopduel.p2Name} vullen nu hun inschatting in...`
-    : (currentQ.group ? 'Groepsvraag! Iedereen typt nu een antwoord op zijn telefoon!' : `${activePlayer.name} denkt na en typt een antwoord...`);
+    : ((currentQ.group || freePlayMode) ? 'Groepsvraag! Iedereen typt nu een antwoord op zijn telefoon!' : `${activePlayer ? activePlayer.name : 'Speler'} denkt na en typt een antwoord...`);
 
   broadcastToAll({
     type: 'QUESTION_REVEALED',
     question: currentQ,
-    activePlayerId: activePlayer.id,
-    activeKopduel
+    activePlayerId: activePlayer ? activePlayer.id : '',
+    activeKopduel,
+    freePlayMode
   });
+}
+
+function renderAnswerMediaOnTV() {
+  const ansMediaBox = document.getElementById('tv-answer-media-box');
+  if (!ansMediaBox) return;
+  ansMediaBox.innerHTML = '';
+  if (currentQ && currentQ.ansMedia && currentQ.ansType && currentQ.ansType !== 'tekst') {
+    ansMediaBox.style.display = 'flex';
+    if (currentQ.ansType === 'foto') {
+      ansMediaBox.innerHTML = `<img src="${currentQ.ansMedia}" alt="Antwoord Media">`;
+    } else if (currentQ.ansType === 'video') {
+      ansMediaBox.innerHTML = `<video src="${currentQ.ansMedia}" controls autoplay></video>`;
+    } else if (currentQ.ansType === 'audio') {
+      ansMediaBox.innerHTML = `<audio src="${currentQ.ansMedia}" controls autoplay></audio>`;
+    }
+  } else {
+    ansMediaBox.style.display = 'none';
+  }
 }
 
 function stopTVMedia() {
   const mediaBox = document.getElementById('tv-media-box');
-  if (mediaBox) mediaBox.innerHTML = '';
+  const ansMediaBox = document.getElementById('tv-answer-media-box');
+  if (mediaBox) { mediaBox.innerHTML = ''; mediaBox.style.display = 'none'; }
+  if (ansMediaBox) { ansMediaBox.innerHTML = ''; ansMediaBox.style.display = 'none'; }
 }
 
 function displayRegularResultsOnTV(verdicts) {
+  const qMediaBox = document.getElementById('tv-media-box');
+  if (qMediaBox) { qMediaBox.innerHTML = ''; qMediaBox.style.display = 'none'; }
+
   const resBox = document.getElementById('tv-result-box');
   resBox.style.display = 'flex';
   resBox.innerHTML = Object.keys(verdicts).map(pId => {
@@ -945,22 +1024,27 @@ function displayRegularResultsOnTV(verdicts) {
     if (!p) return '';
     const bg = v.correct ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)';
     const border = v.correct ? '#10b981' : '#ef4444';
-    const label = v.correct ? `✅ GOED! (${currentQ.good})` : `❌ FOUT! (${currentQ.bad})`;
+    const label = freePlayMode
+      ? (v.correct ? '✅ GOED!' : '❌ FOUT!')
+      : (v.correct ? `✅ GOED! (${currentQ.good})` : `❌ FOUT! (${currentQ.bad})`);
     return `
-      <div style="background: ${bg}; border: 3px solid ${border}; padding: 12px 18px; border-radius: 14px;">
-        <div style="font-size: 0.95rem; opacity: 0.9;">Antwoord van <strong>${p.name}</strong>: "${v.ans}"</div>
-        <div style="font-size: 1.15rem; font-weight: 900; color: ${border}; margin-top: 4px;">${label}</div>
+      <div style="background: ${bg}; border: 3px solid ${border}; padding: 10px 16px; border-radius: 14px;">
+        <div style="font-size: 0.92rem; opacity: 0.9;">Antwoord van <strong>${p.name}</strong>: "${v.ans}"</div>
+        <div style="font-size: 1.1rem; font-weight: 900; color: ${border}; margin-top: 3px;">${label}</div>
       </div>
     `;
   }).join('');
+
   document.getElementById('tv-q-status').innerText = `Juiste antwoord: ${currentQ.a}`;
+  renderAnswerMediaOnTV();
 
   broadcastToAll({
     type: 'SHOW_PLAYER_RESULT',
     verdicts: verdicts,
-    goodText: currentQ.good,
-    badText: currentQ.bad,
-    isKopduel: false
+    goodText: freePlayMode ? '' : currentQ.good,
+    badText: freePlayMode ? '' : currentQ.bad,
+    isKopduel: false,
+    freePlayMode
   });
 }
 
@@ -989,9 +1073,6 @@ function applyCardPenaltyOnTV(playerId, cardType) {
   broadcastToAll({ type: 'SYNC_PLAYERS', players: PLAYERS, gameStarted });
 }
 
-/* ========================================================
-   MOBIEL: SPELER FUNCTIES
-   ======================================================== */
 let myDrunkVarAvailable = true;
 
 function resetMobileBackground() {
@@ -1048,6 +1129,20 @@ function handlePlayerIncomingData(data) {
     document.getElementById('m-wait-turn-text').innerText = 'Spelbord Actief';
     document.getElementById('m-wait-turn-sub').innerText = `Volgende aan de beurt: ${data.nextPlayerName}`;
   }
+  else if (data.type === 'GAME_FINISHED_WIN') {
+    resetMobileBackground();
+    hideAllMobileCards();
+    document.getElementById('m-wait-turn-card').style.display = 'flex';
+    document.getElementById('m-wait-turn-text').innerText = `🏆 ${data.winnerName} heeft gewonnen!`;
+    document.getElementById('m-wait-turn-sub').innerText = 'Wachten op de scheidsrechter voor de overige vragen...';
+  }
+  else if (data.type === 'FREE_PLAY_CATEGORIES') {
+    resetMobileBackground();
+    hideAllMobileCards();
+    document.getElementById('m-wait-turn-card').style.display = 'flex';
+    document.getElementById('m-wait-turn-text').innerText = '📚 Vrije Quizmodus';
+    document.getElementById('m-wait-turn-sub').innerText = 'De scheidsrechter kiest nu de volgende categorie...';
+  }
   else if (data.type === 'TURN_STARTED') {
     resetMobileBackground();
     hideAllMobileCards();
@@ -1081,7 +1176,9 @@ function handlePlayerIncomingData(data) {
     hideAllMobileCards();
 
     let shouldAnswer = false;
-    if (data.activeKopduel) {
+    if (data.freePlayMode) {
+      shouldAnswer = true;
+    } else if (data.activeKopduel) {
       shouldAnswer = (myPlayerId === data.activeKopduel.p1Id || myPlayerId === data.activeKopduel.p2Id);
     } else {
       shouldAnswer = data.question.group || data.activePlayerId === myPlayerId;
@@ -1110,11 +1207,10 @@ function handlePlayerIncomingData(data) {
       document.getElementById('m-result-card').style.display = 'flex';
       document.getElementById('m-result-icon').innerText = myVerdict.correct ? '✅' : '❌';
       document.getElementById('m-result-title').innerText = myVerdict.correct ? 'GOED!' : 'FOUT!';
-      document.getElementById('m-result-sub').innerText = myVerdict.correct ? data.goodText : data.badText;
+      document.getElementById('m-result-sub').innerText = data.freePlayMode ? '' : (myVerdict.correct ? data.goodText : data.badText);
 
-      // Toon Dronken VAR knop ALLEEN als antwoord fout is, het GEEN kopduel is, en speler zijn VAR nog heeft
       const varBtn = document.getElementById('m-btn-drunk-var');
-      if (!myVerdict.correct && !data.isKopduel && myDrunkVarAvailable) {
+      if (!myVerdict.correct && !data.isKopduel && !data.freePlayMode && myDrunkVarAvailable) {
         varBtn.style.display = 'inline-flex';
       } else {
         varBtn.style.display = 'none';
@@ -1171,11 +1267,8 @@ function playerSubmitAnswer() {
   clientConn.send({ type: 'PLAYER_SUBMIT_ANSWER', playerId: myPlayerId, ans: ans });
 }
 
-/* ========================================================
-   SCHEIDSRECHTER FUNCTIES
-   ======================================================== */
 function hideAllRefCards() {
-  ['ref-lobby-card', 'ref-wiegeloot-card', 'ref-board-card', 'ref-special-card', 'ref-pre-question-card', 'ref-judge-card', 'ref-kopduel-card', 'ref-penalty-modal'].forEach(id => {
+  ['ref-lobby-card', 'ref-wiegeloot-card', 'ref-board-card', 'ref-special-card', 'ref-pre-question-card', 'ref-judge-card', 'ref-kopduel-card', 'ref-game-over-card', 'ref-free-play-card', 'ref-penalty-modal'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -1194,9 +1287,7 @@ function renderRefPlayerLists() {
           <img src="${p.selfie}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
           <span style="font-weight: 800; font-size: 0.9rem;">${p.name}</span>
         </div>
-        <button class="btn btn-red" style="padding: 5px 10px; font-size: 0.72rem;" onclick="refKickPlayer('${p.id}', '${p.name}')">
-          Kick ❌
-        </button>
+        <button class="btn btn-red" style="padding: 5px 10px; font-size: 0.72rem;" onclick="refKickPlayer('${p.id}', '${p.name}')">Kick ❌</button>
       </div>
     `).join('');
 
@@ -1260,6 +1351,7 @@ function refShowQuestion() {
     document.getElementById('ref-judge-card').style.display = 'flex';
     document.getElementById('ref-btn-show-result').style.display = 'none';
     document.getElementById('ref-btn-back-to-board').style.display = 'none';
+    document.getElementById('ref-btn-back-to-board').innerText = freePlayMode ? '📚 Kies Volgende Categorie' : '🏟️ Naar Bord';
     document.getElementById('ref-answers-list').innerHTML = '<div style="opacity:0.6; font-size:0.85rem;">Wachten op antwoord...</div>';
   }
   clientConn.send({ type: 'REF_SHOW_QUESTION' });
@@ -1300,6 +1392,19 @@ function handleRefIncomingData(data) {
       document.getElementById('ref-btn-skip-turn').style.display = 'none';
     }
   }
+  else if (data.type === 'GAME_FINISHED_WIN') {
+    hideAllRefCards();
+    document.getElementById('ref-status-sub').innerText = 'Spel Afgelopen';
+    document.getElementById('ref-game-over-card').style.display = 'flex';
+    document.getElementById('ref-win-name').innerText = `🏆 ${data.winnerName} heeft gewonnen!`;
+  }
+  else if (data.type === 'FREE_PLAY_CATEGORIES') {
+    freePlayMode = true;
+    hideAllRefCards();
+    document.getElementById('ref-status-sub').innerText = 'Vrije Quizmodus';
+    document.getElementById('ref-free-play-card').style.display = 'flex';
+    renderRefFreePlayCategories(data.counts || {});
+  }
   else if (data.type === 'SPECIAL_TILE_TRIGGERED') {
     hideAllRefCards();
     document.getElementById('ref-special-card').style.display = 'flex';
@@ -1322,11 +1427,12 @@ function handleRefIncomingData(data) {
   else if (data.type === 'PLAYER_LANDED_PREVIEW') {
     hideAllRefCards();
     activeKopduel = data.isKopduel ? data.activeKopduel : null;
+    freePlayMode = Boolean(data.freePlayMode);
     currentQ = data.question;
 
     document.getElementById('ref-pre-question-card').style.display = 'flex';
-    document.getElementById('ref-pre-cat').innerText = `${data.categoryName} (Vak ${data.tileNum})`;
-    document.getElementById('ref-pre-title').innerText = `${data.playerName} staat klaar!`;
+    document.getElementById('ref-pre-cat').innerText = data.freePlayMode ? `${data.categoryName} (Vrije Quiz)` : `${data.categoryName} (Vak ${data.tileNum})`;
+    document.getElementById('ref-pre-title').innerText = data.freePlayMode ? 'Groepsvraag klaar!' : `${data.playerName} staat klaar!`;
     document.getElementById('ref-preview-q').innerText = data.question.q;
     document.getElementById('ref-preview-a').innerText = data.question.a;
 
@@ -1342,6 +1448,28 @@ function handleRefIncomingData(data) {
       renderRefAnswers(data.answers);
     }
   }
+}
+
+function refStartFreePlay() {
+  clientConn.send({ type: 'REF_START_FREE_PLAY' });
+}
+
+function renderRefFreePlayCategories(counts) {
+  const list = document.getElementById('ref-free-cat-list');
+  const allCats = [...CATEGORIES, { id: 'kopduel', name: '💥 Kopduel' }];
+  list.innerHTML = allCats.map(c => {
+    const left = counts[c.id] || 0;
+    return `
+      <button class="btn btn-blue" style="width:100%; justify-content:space-between;" ${left === 0 ? 'disabled' : ''} onclick="refSelectFreeCat('${c.id}')">
+        <span>${c.name}</span>
+        <span style="background:rgba(0,0,0,0.35); padding:3px 8px; border-radius:8px; font-size:0.78rem;">Nog ${left}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function refSelectFreeCat(catId) {
+  clientConn.send({ type: 'REF_SELECT_FREE_CAT', catId });
 }
 
 function refResolveSpecial(playerId, choice) {
@@ -1361,7 +1489,6 @@ function renderRefKopduelAnswers(answers, kd) {
     `;
   }).join('');
 
-  // Zodra beide duellisten geantwoord hebben, kan de scheidsrechter kiezen wie gewonnen heeft
   if (answers[kd.p1Id] && answers[kd.p2Id]) {
     document.getElementById('ref-kd-actions').innerHTML = `
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
@@ -1398,12 +1525,8 @@ function renderRefAnswers(answers) {
           </span>
         </div>
         <div style="display: flex; gap: 6px; margin-top: 6px;">
-          <button class="btn btn-green" style="padding: 6px; font-size: 0.78rem; flex:1;" onclick="refMarkAnswer('${pId}', true)">
-            ✅ Goed
-          </button>
-          <button class="btn btn-red" style="padding: 6px; font-size: 0.78rem; flex:1;" onclick="refMarkAnswer('${pId}', false)">
-            ❌ Fout
-          </button>
+          <button class="btn btn-green" style="padding: 6px; font-size: 0.78rem; flex:1;" onclick="refMarkAnswer('${pId}', true)">✅ Goed</button>
+          <button class="btn btn-red" style="padding: 6px; font-size: 0.78rem; flex:1;" onclick="refMarkAnswer('${pId}', false)">❌ Fout</button>
         </div>
       </div>
     `;
@@ -1438,9 +1561,6 @@ function toggleRefPenaltyModal() {
   modal.style.display = isHidden ? 'flex' : 'none';
 }
 
-/* ========================================================
-   ALGEMENE HULPFUNCTIES
-   ======================================================== */
 function showSipAlert(msg) {
   const banner = document.getElementById('sip-alert');
   banner.innerText = msg;
