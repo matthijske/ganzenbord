@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Voetbalweekend Ganzenbord (63 Vakjes)</title>
+  <title>Ganzenbord Boekarest</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -11,13 +11,12 @@
 <body>
 
   <button id="fs-toggle" onclick="toggleFullscreen()" style="display: none;">⛶ Volledig Scherm</button>
-  <div id="sip-alert" class="sip-banner"></div>
 
   <div id="view-select" class="screen-view">
-    <h1 style="font-size: 2.2rem; color: var(--gold); font-weight: 900;">⚽ GANZENBORD 63</h1>
+    <h1 style="font-size: 2.1rem; color: var(--gold); font-weight: 900; text-align: center;">⚽ GANZENBORD BOEKAREST</h1>
     <p style="opacity: 0.85; max-width: 340px; font-size: 0.95rem; text-align: center;">Kies de rol van dit apparaat:</p>
     <button class="btn btn-green" style="width: 100%; max-width: 320px;" onclick="initTV()">📺 1. Tablet / TV Weergave</button>
-    <button class="btn btn-purple" style="width: 100%; max-width: 320px;" onclick="showRefereeSetup()">⚖️ 2. De Scheidsrechter (Jij)</button>
+    <button class="btn btn-purple" style="width: 100%; max-width: 320px;" onclick="showRefereeSetup()">⚖️ 2. Scheids</button>
     <button class="btn btn-blue" style="width: 100%; max-width: 320px;" onclick="showPlayerSetup()">📱 3. Speler Deelnemen</button>
   </div>
 
@@ -51,10 +50,10 @@
 
   <div id="ref-setup-view" class="screen-view" style="display: none;">
     <div class="m-card">
-      <h2 style="color: var(--ref); text-align: center;">⚖️ Scheidsrechter Login</h2>
+      <h2 style="color: var(--ref); text-align: center;">⚖️ Scheids Login</h2>
       <label class="input-label">Kamercode (van TV):</label>
       <input type="number" id="ref-join-code" class="m-input" placeholder="4-cijferige code">
-      <button class="btn btn-purple" style="width: 100%;" onclick="connectReferee()">Verbind als Scheidsrechter</button>
+      <button class="btn btn-purple" style="width: 100%;" onclick="connectReferee()">Verbind als Scheids</button>
     </div>
   </div>
 
@@ -68,38 +67,68 @@
       <div class="tv-sidebar">
         <div class="sidebar-title">📊 Volgorde & Stand (63)</div>
         <div class="leaderboard-list" id="tv-leaderboard"></div>
-        <div class="sidebar-title" style="margin-top: 2px; font-size: 0.72rem;">🗂️ Categorieën</div>
-        <div class="cat-legend">
-          <span>🇷🇴 Roemenië</span>
-          <span>🌍 Het WK</span>
-          <span>🎬 Video/Audio</span>
-          <span>📸 Foto</span>
-          <span>⚽ Algemeen</span>
-          <span>🪪 Paspoort</span>
-          <span>💶 Marktwaarde</span>
+
+        <div id="tv-sidebar-dice-box" class="sidebar-dice-box" style="display: none;">
+          <div id="tv-dice-turn-player" style="font-weight: 900; font-size: 0.85rem; text-align: center;">Speler gooit...</div>
+          <div class="dice-scene sidebar-dice-scene">
+            <div class="dice-cube" id="tv-dice-cube" style="transform: scale(0.58) rotateX(-15deg) rotateY(20deg);">
+              <div class="cube-face face-1"><div class="pip"></div></div>
+              <div class="cube-face face-6"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+              <div class="cube-face face-2"><div class="pip"></div><div class="pip"></div></div>
+              <div class="cube-face face-5"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+              <div class="cube-face face-3"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+              <div class="cube-face face-4"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+            </div>
+          </div>
+          <div id="tv-dice-status" style="font-size: 0.78rem; font-weight: 800; color: var(--gold); text-align: center;">Wachten op worp...</div>
         </div>
+
+        <div class="sidebar-title" style="margin-top: 2px; font-size: 0.72rem;">🗂️ Categorieën</div>
+        <div class="cat-legend"></div>
+
         <div id="tv-rules-box" class="sidebar-rules-box">
           <div style="color:var(--gold);font-weight:900;text-transform:uppercase;margin-bottom:3px;">⚖️ Regels & Kaarten</div>
           <div>🟨 <b>Geel:</b> 5 slokken | <b>2e Geel:</b> 1 beurt + Atje</div>
           <div>🟥 <b>Rood:</b> 2 beurten + Atje</div>
           <div>💥 <b>Kopduel:</b> Win = +1 vak | Verlies = -1 vak & Shotje</div>
-          <div>🍺 <b>VAR:</b> Gelijk = Goal (Scheids Atje) | Fout = Buitenspel (Shotje)</div>
+          <div>📺 <b>VAR:</b> Gelijk = Goal (Scheids Atje) | Fout = Buitenspel (Shotje)</div>
         </div>
+
         <div style="font-size: 0.72rem; opacity: 0.65; text-align: center;">
           Kamer Code: <span id="tv-room-code-badge" style="color:var(--gold); font-weight:900;">----</span>
         </div>
       </div>
 
       <div id="tv-var-overlay" class="var-tv-banner">
-        <div class="var-box-frame" id="tv-var-frame">📺 VAR CHECK...</div>
-        <h2 id="tv-var-title" style="font-size:2.1rem;color:var(--gold);">De Scheidsrechter controleert het antwoord op internet!</h2>
-        <p id="tv-var-sub" style="font-size:1.35rem;opacity:0.9;"></p>
+        <div class="eredivisie-var-frame">
+          <div class="eredivisie-var-header">
+            <span id="tv-var-badge" class="var-logo-box">VAR</span>
+            <span class="var-league-label">EREDIVISIE • VIDEO ASSISTANT REFEREE</span>
+          </div>
+          <div id="tv-var-status" class="var-status-bar">CHECKING...</div>
+          <h2 id="tv-var-title" class="var-main-title">VAR CHECK</h2>
+          <p id="tv-var-sub" class="var-sub-text">De Scheids controleert het antwoord op internet</p>
+        </div>
+      </div>
+
+      <div id="tv-card-overlay" class="tv-card-overlay" style="display: none;">
+        <div class="tv-card-shape"></div>
+        <h1 id="tv-card-title">KAART!</h1>
+        <p id="tv-card-sub"></p>
+      </div>
+
+      <div id="tv-free-play-overlay" class="tv-overlay" style="display: none;">
+        <div class="overlay-box">
+          <h1 style="color: var(--gold); font-size: 2rem;">📚 VRIJE QUIZMODUS — OVERIGE VRAGEN</h1>
+          <p style="opacity: 0.85;">De Scheids kiest nu een vraag uit de overgebleven ongespeelde vragen:</p>
+          <div id="tv-free-play-grid" class="free-play-grid"></div>
+        </div>
       </div>
     </div>
 
     <div id="tv-lobby-overlay" class="tv-overlay">
       <div class="overlay-box">
-        <h1 style="color: var(--gold); font-size: 2.2rem;">⚽ DUGOUT & KLEEDKAMER</h1>
+        <h1 style="color: var(--gold); font-size: 2.2rem;">⚽ GANZENBORD BOEKAREST</h1>
         <p style="font-size: 1.05rem; opacity: 0.85;">Ga op je telefoon naar de site en vul de kamercode in:</p>
         <div id="tv-room-code" class="room-code-display">....</div>
         <div id="tv-csv-status" style="font-size: 0.8rem; color: #10b981; font-weight: 700;">Vragenlijst inladen...</div>
@@ -107,7 +136,7 @@
           <h3 style="font-size: 0.95rem; text-transform: uppercase; margin-bottom: 10px; opacity: 0.7;" id="tv-lobby-count">Verbonden Spelers (0)</h3>
           <div class="lobby-players-grid" id="tv-lobby-players"></div>
         </div>
-        <div id="tv-lobby-msg" style="margin-top: 6px; color: var(--gold); font-weight: 700;">Wachten tot de Scheidsrechter het spel start...</div>
+        <div id="tv-lobby-msg" style="margin-top: 6px; color: var(--gold); font-weight: 700;">Wachten tot de Scheids het spel start...</div>
       </div>
     </div>
 
@@ -119,30 +148,12 @@
       </div>
     </div>
 
-    <div id="tv-dice-overlay" class="tv-overlay" style="display: none;">
-      <div class="overlay-box">
-        <div id="tv-dice-player-avatar" class="avatar-large"></div>
-        <h2 id="tv-dice-turn-player" style="font-size: 1.8rem;">Speler is aan de beurt</h2>
-        <div class="dice-scene">
-          <div class="dice-cube" id="tv-dice-cube">
-            <div class="cube-face face-1"><div class="pip"></div></div>
-            <div class="cube-face face-6"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
-            <div class="cube-face face-2"><div class="pip"></div><div class="pip"></div></div>
-            <div class="cube-face face-5"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
-            <div class="cube-face face-3"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
-            <div class="cube-face face-4"><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
-          </div>
-        </div>
-        <div id="tv-dice-status" style="font-size: 1.2rem; font-weight: 800; color: var(--gold);">Wachten op worp vanaf mobiel...</div>
-      </div>
-    </div>
-
     <div id="tv-special-overlay" class="tv-overlay" style="display: none;">
       <div class="overlay-box">
         <div id="tv-spec-icon" style="font-size: 4.5rem;">🚨</div>
         <h1 id="tv-spec-title" style="color: var(--gold); font-size: 2.4rem;">SPECIAAL VAKJE!</h1>
         <p id="tv-spec-desc" style="font-size: 1.65rem; font-weight: 800; line-height: 1.4;"></p>
-        <div id="tv-spec-sub" style="font-size: 1.05rem; opacity: 0.8; margin-top: 8px;">Wachten op de Scheidsrechter...</div>
+        <div id="tv-spec-sub" style="font-size: 1.05rem; opacity: 0.8; margin-top: 8px;">Wachten op de Scheids...</div>
       </div>
     </div>
 
@@ -153,11 +164,11 @@
           <div class="stake-pill stake-good" id="tv-stake-good">✅ Goed: Deel 3 slokken uit</div>
           <div class="stake-pill stake-bad" id="tv-stake-bad">❌ Fout: Neem 3 slokken</div>
         </div>
-        <h2 id="tv-q-text" style="font-size: 2.3rem; font-weight: 800; line-height: 1.35; display: none;">Vraagtekst...</h2>
-        <div id="tv-media-box" style="display: none; width: 100%; max-height: 45vh; justify-content: center; align-items: center;"></div>
-        <div id="tv-result-box" style="display: none; width: 92%; flex-direction: column; gap: 10px; margin-top: 6px; max-height: 36vh; overflow-y: auto;"></div>
-        <div id="tv-answer-media-box" style="display: none; width: 100%; max-height: 45vh; justify-content: center; align-items: center; margin-top: 6px;"></div>
-        <div id="tv-q-status" style="font-size: 1.15rem; color: var(--gold); font-weight: 700;">Wachten tot de Scheidsrechter de vraag toont...</div>
+        <h2 id="tv-q-text" style="display: none;">Vraagtekst...</h2>
+        <div id="tv-media-box" style="display: none;"></div>
+        <div id="tv-result-box" style="display: none;"></div>
+        <div id="tv-answer-media-box" style="display: none;"></div>
+        <div id="tv-q-status" style="font-size: 1.15rem; color: var(--gold); font-weight: 700;">Wachten op de Scheids...</div>
       </div>
     </div>
 
@@ -166,7 +177,7 @@
         <div style="font-size: 4.5rem;">🏆</div>
         <h1 id="tv-win-title" style="color: var(--gold); font-size: 2.3rem;">KAMPIOEN!</h1>
         <p id="tv-win-sub" style="font-size: 1.2rem; opacity: 0.9;">Het Doel & De Kantine (Vak 63) is bereikt!</p>
-        <div style="font-size: 0.95rem; color: #10b981; font-weight: 800; margin-top: 8px;">De Scheidsrechter kan nu op zijn telefoon kiezen om door te gaan met alle overige vragen!</div>
+        <div style="font-size: 0.95rem; color: #10b981; font-weight: 800; margin-top: 8px;">De Scheids kan nu op zijn telefoon kiezen om door te gaan met alle overige vragen!</div>
       </div>
     </div>
   </div>
@@ -180,13 +191,13 @@
           <div id="m-tile-info" style="font-size: 0.78rem; opacity: 0.85; display: none;">Vak 1</div>
         </div>
       </div>
-      <div id="m-var-badge" style="display: none; font-size: 0.72rem; background: rgba(245, 158, 11, 0.2); border: 1px solid var(--gold); color: var(--gold); padding: 4px 8px; border-radius: 8px; font-weight: 800;">🍺 VAR: 1x</div>
+      <button id="m-var-badge" class="btn btn-yellow" style="display: none; padding: 6px 10px; font-size: 0.76rem;" onclick="playerUseVar()">📺 VAR (1x)</button>
     </div>
 
     <div class="m-body-center">
       <div id="m-lobby-card" class="m-card" style="text-align: center;">
         <h3 style="color: var(--gold);">In de Dugout</h3>
-        <p style="opacity: 0.8;">Je zit klaar! Kijk naar de TV tot de scheidsrechter het spel start.</p>
+        <p style="opacity: 0.8;">Je zit klaar! Kijk naar de TV tot de scheids het spel start.</p>
       </div>
 
       <div id="m-roll-order-card" class="m-card" style="display: none; text-align: center;">
@@ -239,7 +250,6 @@
         <div id="m-result-icon" style="font-size: 3.5rem;">✅</div>
         <h1 id="m-result-title" style="font-size: 2rem; font-weight: 900;">GOED!</h1>
         <p id="m-result-sub" style="font-size: 1.1rem; font-weight: 700;"></p>
-        <button class="btn btn-yellow" id="m-btn-drunk-var" style="display: none; width: 100%; margin-top: 10px;" onclick="playerUseDrunkVar()">🍺 Twijfel aan antwoord? Zet Dronken VAR in!</button>
       </div>
     </div>
   </div>
@@ -247,7 +257,7 @@
   <div id="ref-view" class="mobile-fullscreen" style="display: none;">
     <div class="m-header" style="border-left: 6px solid var(--ref);">
       <div>
-        <div style="font-weight: 900; font-size: 1.05rem; color: var(--ref);">⚖️ DE SCHEIDSRECHTER</div>
+        <div style="font-weight: 900; font-size: 1.05rem; color: var(--ref);">⚖️ SCHEIDS</div>
         <div style="font-size: 0.72rem; opacity: 0.75;" id="ref-status-sub">Dugout Beheer</div>
       </div>
       <button id="ref-top-cards-btn" class="btn btn-yellow" style="display: none; padding: 6px 10px; font-size: 0.72rem;" onclick="toggleRefPenaltyModal()">🟨🟥 Kaart / Kick</button>
@@ -263,7 +273,7 @@
       <div id="ref-wiegeloot-card" class="m-card" style="display: none; text-align: center;">
         <h3 style="color: var(--gold);">🎲 Startvolgorde Gooien</h3>
         <p id="ref-wiegeloot-status" style="font-size: 0.88rem; opacity: 0.85;">Wachten tot alle spelers hebben gegooid...</p>
-        <div id="ref-wiegeloot-list" class="scroll-box" style="max-height: 290px;"></div>
+        <div id="ref-wiegeloot-list" class="scroll-box" style="max-height: 300px;"></div>
         <button class="btn btn-green" id="ref-btn-to-board-initial" style="width: 100%; display: none;" onclick="refGoToBoardInitial()">🏟️ Naar Bord</button>
       </div>
 
@@ -325,10 +335,9 @@
         <button class="btn btn-green" style="width: 100%;" onclick="refStartFreePlay()">🎉 Doorgaan met alle vragen</button>
       </div>
 
-      <div id="ref-free-play-card" class="m-card" style="display: none;">
-        <h3 style="color: var(--gold); text-align: center;">📚 Kies een Categorie</h3>
-        <p style="font-size: 0.78rem; opacity: 0.8; text-align: center;">Alleen ongespeelde vragen (eerst Prioriteit 1, daarna 2).</p>
-        <div id="ref-free-cat-list" class="scroll-box" style="max-height: 310px;"></div>
+      <div id="ref-free-play-card" class="m-card" style="display: none; max-height: 86dvh;">
+        <h3 id="ref-free-title" style="color: var(--gold); text-align: center; font-size: 1rem;">📚 Kies een Categorie</h3>
+        <div id="ref-free-cat-list" class="scroll-box" style="max-height: 68dvh;"></div>
       </div>
 
       <div id="ref-penalty-modal" class="m-card" style="display: none;">
