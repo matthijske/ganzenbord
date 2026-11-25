@@ -1,17 +1,53 @@
 ﻿Categorie;Prioriteit;Type;Media;Vraag;Antwoord;Antwoord_Type;Antwoord_Media;Beloning;Straf;Groepsvraag
 roemenie;1;audio;media/roemenie/zone.mp3;Wie zingt dit nummer?;O-Zone;foto;media/roemenie/zone.png;Deel 3 slokken uit;Neem 3 slokken;NEE
 roemenie;1;video;media/roemenie/zone.mp4;Waar staat de afkorting FCSB voor?;Niks;foto;media/roemenie/niks.png;Deel 3 slokken uit;Neem 3 slokken;JA
-wk;1;audio;media/roemenie/zone.mp3;Wie zingt dit nummer?;O-Zone;foto;media/roemenie/zone.png;Deel 3 slokken uit;Neem 3 slokken;NEE
-wk;1;video;media/roemenie/zone.mp4;Waar staat de afkorting FCSB voor?;Niks;foto;media/roemenie/niks.png;Deel 3 slokken uit;Neem 3 slokken;JA
-video_audio;1;audio;media/roemenie/zone.mp3;Wie zingt dit nummer?;O-Zone;foto;media/roemenie/zone.png;Deel 3 slokken uit;Neem 3 slokken;NEE
-video_audio;1;video;media/roemenie/zone.mp4;Waar staat de afkorting FCSB voor?;Niks;foto;media/roemenie/niks.png;Deel 3 slokken uit;Neem 3 slokken;JA
-foto;1;audio;media/roemenie/zone.mp3;Wie zingt dit nummer?;O-Zone;foto;media/roemenie/zone.png;Deel 3 slokken uit;Neem 3 slokken;NEE
-foto;1;video;media/roemenie/zone.mp4;Waar staat de afkorting FCSB voor?;Niks;foto;media/roemenie/niks.png;Deel 3 slokken uit;Neem 3 slokken;JA
-algemeen;1;audio;media/roemenie/zone.mp3;Wie zingt dit nummer?;O-Zone;foto;media/roemenie/zone.png;Deel 3 slokken uit;Neem 3 slokken;NEE
-algemeen;1;video;media/roemenie/zone.mp4;Waar staat de afkorting FCSB voor?;Niks;foto;media/roemenie/niks.png;Deel 3 slokken uit;Neem 3 slokken;JA
-paspoort;1;audio;media/roemenie/zone.mp3;Wie zingt dit nummer?;O-Zone;foto;media/roemenie/zone.png;Deel 3 slokken uit;Neem 3 slokken;NEE
-paspoort;1;video;media/roemenie/zone.mp4;Waar staat de afkorting FCSB voor?;Niks;foto;media/roemenie/niks.png;Deel 3 slokken uit;Neem 3 slokken;JA
-transfers;1;audio;media/roemenie/zone.mp3;Wie zingt dit nummer?;O-Zone;foto;media/roemenie/zone.png;Deel 3 slokken uit;Neem 3 slokken;NEE
-transfers;1;video;media/roemenie/zone.mp4;Waar staat de afkorting FCSB voor?;Niks;foto;media/roemenie/niks.png;Deel 3 slokken uit;Neem 3 slokken;JA
-kopduel;1;audio;media/roemenie/zone.mp3;Wie zingt dit nummer?;O-Zone;foto;media/roemenie/zone.png;Deel 3 slokken uit;Neem 3 slokken;NEE
-kopduel;1;video;media/roemenie/zone.mp4;Waar staat de afkorting FCSB voor?;Niks;foto;media/roemenie/niks.png;Deel 3 slokken uit;Neem 3 slokken;JA
+wk;1;tekst;;Hoeveel wedstrijden heb ik afgelopen WK live gekeken?;66;tekst;;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;2;tekst;;Wie scoorde het enige doelpunt in de WK finale van 2026?;Ferran Torres;foto;media/wk/torres.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;1;tekst;;Noem 6 van de 8 kwartfinalisten van afgelopen WK;Frankrijk, Marokko, Spanje, België, Noorwegen, Engeland, Argentinië en Zwitserland;foto;media/wk/kwart.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;1;tekst;;Wat was de uitslag van de troostfinale van afgelopen WK?;4-jun;foto;media/wk/troost.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;1;tekst;;Spanje heeft afgelopen WK slechts één tegengoal gekregen, wie scoorde dit doelpunt?;Charles de Ketelaere;foto;media/wk/ketel.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;2;tekst;;Welk land won er afgelopen WK in de RO32 van Duitsland met penalty's?;Paraguay;foto;media/wk/para.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;1;tekst;;Hoe lang duurde de rust van de WK finale exact?;27 minuten en 23 seconden;foto;media/wk/show.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;2;tekst;;Welk land uit Afrika debuteerde afgelopen WK?;Kaapverdië;foto;media/wk/kaap.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;tekst;;Noem een Nederlander die zijn penalty scoorde tegen Marokko;Koopmeiners of Weghorst;foto;media/wk/pingel.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;tekst;;Hoeveel wedstrijden zijn afgelopen WK beslist met een penalty shootout?;4;foto;media/wk/pingel2.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;2;tekst;;Hoeveel assists had Olise afgelopen WK?;7;foto;media/wk/assist.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;2;tekst;;Hoeveel doelpunten heeft Mbappe gemaakt afgelopen WK?;10;foto;media/wk/doelp.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+kopduel;2;tekst;;Hoeveel hattricks zijn er afgelopen WK gemaakt?;4;foto;media/wk/hatt.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+kopduel;2;tekst;;Hoeveel doelpunten zijn er in totaal gemaakt afgelopen WK?;308;foto;media/wk/aantal.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;tekst;;Wat was de uitslag van de openingswedstrijd van afgelopen WK?;2 - 0;foto;media/wk/20.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;1;tekst;;Wat is het enige land dat afgelopen WK niet gescoord heeft?;Panama;foto;media/wk/panama.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;tekst;;Noem een dier waarop een van de mascottes van het afgelopen WK was gebaseerd.;Eland, jaguar of zeearend;foto;media/wk/mascot.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;tekst;;Wat was de naam van de bal die afgelopen WK gebruikt is?;Adidas Trionda;foto;media/wk/bal.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;2;tekst;;Noem een van de speelsteden van de openingswedstrijden van afgelopen WK;Mexico-Stad, Toronto of Los Angeles;tekst;;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;2;tekst;;Hoeveel wedstrijden zijn er in totaal meer gespeeld afgelopen WK dan tijdens het WK in 2022?;40;foto;media/wk/40.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;2;tekst;;Welke Amerikaanse tv-zender had de rechten van de WK-wedstrijden?;FOX of Telemundo;foto;media/wk/fox.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;2;tekst;;Hoeveel speelsteden waren er afgelopen WK in totaal?;16;foto;media/wk/16.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;1;tekst;;Welk land had afgelopen WK gemiddeld het meeste balbezit?;Turkije (66%);foto;media/wk/balbezit.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;2;tekst;;Hoeveel wedstrijden eindigden/stonden 0-0 na 90 minuten afgelopen WK?;9;foto;media/wk/00.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;tekst;;Op hoeveel meter boven zeeniveau ligt het Aztekenstadion?;2240 meter;foto;media/wk/2240.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;1;tekst;;Er gaat een verhaal rond dat India om een bizarre reden zichzelf heeft afgemeld voor het WK van 1950. Wat was de reden?;Ze mochten niet op blote voeten spelen.;foto;media/wk/india.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;2;tekst;;Van wie nam Mbappe de WK-topscoorders titel over na twee keer te scoren in de troostfinale?;Lionel Messi;foto;media/wk/overnemen.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;2;tekst;;Noem een persoon die zowel als spelers als als bondscoach het WK heeft gewonnen;Mário Zagallo, Franz Beckenbauer of Didier Deschamps;foto;media/wk/personen.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+kopduel;2;tekst;;Noem iemand die een penalty miste tegen Argentinië in de kwartfinale van het WK 2022;Virgil van Dijk of Steven Berghuis;foto;media/wk/osso.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+kopduel;1;tekst;;Wat voor soort dier voorspelde in 2010 alle WK-wedstrijden van Duitsland EN de finale correct?;Paul de Octopus;foto;media/wk/paul.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;1;tekst;;Hoe heette de bal waarmee het WK in 2010 gespeeld is, die bekend staat om zijn zwabber?;Adidas Jabulani;foto;media/wk/jabu.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;1;foto;media/wk/wieowie.png;Welk land ontbreekt er op de foto?;Uruguay;foto;media/wk/uaregay.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;tekst;;Nederland is de WK finale van 2010 uiteindelijk met 10 man geëindigd, nadat een speler 2x geel kreeg. Wie was dit?;John Heitinga;foto;media/wk/smeerjein.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;foto;media/wk/beker.png;Wat is het totaalgewicht van de WK-beker?;6,175 kg;foto;media/wk/zwaar.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;2;tekst;;Wat is het enige land dat nog nooit een WK gemist heeft?;Brazilië;foto;media/wk/meedoen.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+video_audio;2;tekst;;Welk land heeft het vaakst in de WK finale gestaan?;Duitsland;foto;media/wk/duitsers.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;1;tekst;;Hoeveel doelpunten zijn er gevallen in de doelpuntrijkste WK-wedstrijd ooit?;12 doelpunten;foto;media/wk/12.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+foto;2;tekst;;Wie is de speler met de meeste WK wedstrijden?;Lionel Messi;foto;media/wk/messi.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;1;tekst;;In welk land werd voor de eerste keer gebruik gemaakt van de VAR op een WK?;Rusland;foto;media/wk/poetin.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+algemeen;1;tekst;;Wat is de beste WK prestatie van de Belgische gouden generatie?;3e plaats;foto;media/wk/belg.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;tekst;;Wie won de gouden bal voor beste speler van het WK in 2018?;Luka Modrić ;foto;media/wk/luka.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+paspoort;2;tekst;;Wie won de gouden bal voor beste speler van het WK in 2010?;Diego Forlán;foto;media/wk/forlan.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;2;tekst;;Wat was voor Curaçao het kleinste land dat ooit meedeed aan een WK;Ijsland in 2018;foto;media/wk/ijs.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+transfers;1;foto;media/wk/knaan.png;Uit welk land is K'Naan afkomstig, bekend van Wavin' Flag?;Somalië;foto;media/wk/som.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+kopduel;1;audio;media/wk/one.mp3;Van welk WK was dit nummer. Benoem het land en het jaartal.;WK 2014 in Brazilië;foto;media/wk/one2.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+kopduel;1;audio;media/wk/hayya.mp3;Wat betekent 'Hayya hayya'?;Kom op, laten we gaan of schiet op;foto;media/wk/komop.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;2;tekst;;Wie won de troostfinale op het WK van 2022?;Kroatië;foto;media/wk/kroatie.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+roemenie;1;tekst;;Aan wie gaf Nigel de Jong in de WK finale van 2010 een karatetrap?;Xabi Alonso;foto;media/wk/alonso.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;foto;media/wk/2010v.png;Wie mist er in deze bracket van 2010?;Slowakije;foto;media/wk/2010.png;Deel 3 slokken uit;Neem 3 slokken;NEE
+wk;1;foto;media/wk/2022v.png;Wie mist er in deze bracket van 2022?;Verenigde Staten;foto;media/wk/2022.png;Deel 3 slokken uit;Neem 3 slokken;NEE
