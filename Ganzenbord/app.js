@@ -21,6 +21,9 @@ let pendingSpecialTile = null;
 let freePlayCatalog = {};
 let selectedFreeCatId = '';
 
+const tvAudioPlayer = new Audio();
+tvAudioPlayer.preload = 'auto';
+
 const DICE_ROTATIONS = {
   1: { x: 0, y: 0 },
   6: { x: 0, y: 180 },
@@ -37,7 +40,7 @@ const CATEGORIES = [
   { id: 'foto',        name: '📸 Foto',                 short: 'Foto',        icon: '📸' },
   { id: 'algemeen',    name: '⚽ Algemeen',             short: 'Algemeen',    icon: '⚽' },
   { id: 'paspoort',    name: '🪪 Spelerspaspoort',      short: 'Paspoort',    icon: '🪪' },
-  { id: 'marktwaarde', name: '💶 Marktwaarde',          short: 'Marktwaarde', icon: '💶' }
+  { id: 'waarde',      name: '💶 Marktwaarde',          short: 'Waarde',      icon: '💶' }
 ];
 
 const SPECIAL_TILES = {
@@ -113,14 +116,28 @@ let QUESTION_POOLS = {
   paspoort: [
     { idKey: 'def_pa_1', cat: 'paspoort', priority: 1, type: 'tekst', media: '', q: 'Spelerspaspoort: FC Groningen -> PSV -> Chelsea -> Real Madrid -> Bayern München. Wie ben ik?', a: 'Arjen Robben', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
   ],
-  marktwaarde: [
-    { idKey: 'def_mw_1', cat: 'marktwaarde', priority: 1, type: 'tekst', media: '', q: 'Voor welk recordbedrag (in miljoenen euro\'s) vertrok Neymar in 2017 van Barcelona naar PSG?', a: '222 miljoen euro', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
+  waarde: [
+    { idKey: 'def_wa_1', cat: 'waarde', priority: 1, type: 'tekst', media: '', q: 'Voor welk recordbedrag (in miljoenen euro\'s) vertrok Neymar in 2017 van Barcelona naar PSG?', a: '222 miljoen euro', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
   ],
   kopduel: [
     { idKey: 'def_kd_1', cat: 'kopduel', priority: 1, type: 'tekst', media: '', q: 'Inschattingsvraag: Hoeveel officiële interlands speelde Gheorghe Hagi voor Roemenië?', a: '124 interlands', ansType: 'tekst', ansMedia: '', good: 'Winnaar +1 vak', bad: 'Verliezer -1 vak & Shotje', group: true }
   ]
 };
 let BACKUP_POOLS = JSON.parse(JSON.stringify(QUESTION_POOLS));
+
+function cleanMediaPath(raw) {
+  return (raw || '').trim().replace(/^["']|["']$/g, '').replace(/\\/g, '/');
+}
+
+function resolveMediaType(rawType, path) {
+  const t = (rawType || '').trim().toLowerCase();
+  const p = (path || '').toLowerCase();
+  if (!p) return 'tekst';
+  if (['audio', 'mp3', 'm4a', 'muziek', 'geluid'].includes(t) || /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/.test(p)) return 'audio';
+  if (['video', 'mp4', 'mov'].includes(t) || /\.(mp4|webm|mov|m4v)(\?.*)?$/.test(p)) return 'video';
+  if (['foto', 'image', 'afbeelding', 'img'].includes(t) || /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/.test(p)) return 'foto';
+  return t || 'tekst';
+}
 
 async function loadQuestionsFromCSV() {
   try {
@@ -130,30 +147,29 @@ async function loadQuestionsFromCSV() {
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
     if (lines.length < 2) return;
 
-    const freshPools = { roemenie: [], wk: [], video_audio: [], foto: [], algemeen: [], paspoort: [], marktwaarde: [], kopduel: [] };
+    const freshPools = { roemenie: [], wk: [], video_audio: [], foto: [], algemeen: [], paspoort: [], waarde: [], kopduel: [] };
 
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(';');
       if (cols.length < 6) continue;
-      let cat = cols[0].trim().toLowerCase();
-      if (cat === 'transfers') cat = 'marktwaarde';
+      const cat = cols[0].trim().toLowerCase();
 
       let priority = 2, type = 'tekst', media = '', q = '', a = '', ansType = 'tekst', ansMedia = '', good = 'Deel 3 slokken uit', bad = 'Neem 3 slokken', group = false;
 
       if (cols.length >= 11) {
         priority = parseInt((cols[1] || '2').trim(), 10) || 2;
-        type     = (cols[2] || 'tekst').trim().toLowerCase();
-        media    = (cols[3] || '').trim();
+        media    = cleanMediaPath(cols[3]);
+        type     = resolveMediaType(cols[2], media);
         q        = (cols[4] || '').trim();
         a        = (cols[5] || '').trim();
-        ansType  = (cols[6] || 'tekst').trim().toLowerCase();
-        ansMedia = (cols[7] || '').trim();
+        ansMedia = cleanMediaPath(cols[7]);
+        ansType  = resolveMediaType(cols[6], ansMedia);
         good     = (cols[8] || 'Deel 3 slokken uit').trim();
         bad      = (cols[9] || 'Neem 3 slokken').trim();
         group    = (cols[10] || 'NEE').trim().toUpperCase() === 'JA';
       } else {
-        type  = (cols[1] || 'tekst').trim().toLowerCase();
-        media = (cols[2] || '').trim();
+        media = cleanMediaPath(cols[2]);
+        type  = resolveMediaType(cols[1], media);
         q     = (cols[3] || '').trim();
         a     = (cols[4] || '').trim();
         good  = (cols[5] || 'Deel 3 slokken uit').trim();
@@ -244,6 +260,18 @@ function unlockTabletAudio() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();
+    tvAudioPlayer.muted = true;
+    const p = tvAudioPlayer.play();
+    if (p && p.then) {
+      p.then(() => {
+        tvAudioPlayer.pause();
+        tvAudioPlayer.muted = false;
+      }).catch(() => {
+        tvAudioPlayer.muted = false;
+      });
+    } else {
+      tvAudioPlayer.muted = false;
+    }
   } catch (e) {}
 }
 
@@ -1033,9 +1061,7 @@ function handleKopduelVerdictOnTV(data) {
     return;
   }
 
-  const qMediaBox = document.getElementById('tv-media-box');
-  if (qMediaBox) { qMediaBox.innerHTML = ''; qMediaBox.style.display = 'none'; }
-
+  stopTVMedia();
   const roller = PLAYERS.find(x => x.id === activeKopduel.rollerId);
   const rollerWon = data.winnerId === activeKopduel.rollerId;
   const loserId = rollerWon ? activeKopduel.p2Id : activeKopduel.rollerId;
@@ -1146,8 +1172,8 @@ function prepareFreePlayQuestionOnTV(catId, idKey) {
   });
 }
 
-function buildMediaHTML(type, mediaPath, audioId) {
-  const safeSrc = encodeURI(mediaPath.trim());
+function buildMediaHTML(type, mediaPath, btnId) {
+  const safeSrc = encodeURI(cleanMediaPath(mediaPath));
   if (type === 'foto') {
     return `<img src="${safeSrc}" alt="Media">`;
   } else if (type === 'video') {
@@ -1155,24 +1181,70 @@ function buildMediaHTML(type, mediaPath, audioId) {
   } else if (type === 'audio') {
     return `
       <div class="audio-player-wrap">
-        <button class="btn btn-yellow audio-play-btn" onclick="toggleTVAudio('${audioId}', this)">🔊 Speel Audio Af</button>
-        <audio id="${audioId}" src="${safeSrc}" controls playsinline preload="auto"></audio>
+        <button id="${btnId}" class="btn btn-yellow audio-play-btn" onclick="toggleTVAudio('${safeSrc.replace(/'/g, "\\'")}', '${btnId}')">🔊 Speel Audio Af</button>
+        <div id="${btnId}-info" style="font-size:0.78rem; opacity:0.8;">${cleanMediaPath(mediaPath)}</div>
       </div>
     `;
   }
   return '';
 }
 
-function toggleTVAudio(audioId, btnEl) {
-  const audio = document.getElementById(audioId);
-  if (!audio) return;
-  if (audio.paused) {
-    audio.play().then(() => {
-      if (btnEl) btnEl.innerText = '⏸️ Pauzeer Audio';
-    }).catch(() => {});
+function startTVAudio(mediaPath, btnId) {
+  const safeSrc = encodeURI(cleanMediaPath(mediaPath));
+  const btn = document.getElementById(btnId);
+  const info = document.getElementById(`${btnId}-info`);
+  tvAudioPlayer.pause();
+  tvAudioPlayer.src = safeSrc;
+  tvAudioPlayer.currentTime = 0;
+  tvAudioPlayer.load();
+
+  tvAudioPlayer.onended = () => {
+    if (btn) btn.innerText = '🔊 Speel Opnieuw Af';
+  };
+  tvAudioPlayer.onerror = () => {
+    if (btn) btn.innerText = '❌ Audio niet gevonden';
+    if (info) info.innerText = `Controleer pad: ${cleanMediaPath(mediaPath)}`;
+  };
+
+  const p = tvAudioPlayer.play();
+  if (p && p.then) {
+    p.then(() => {
+      if (btn) btn.innerText = '⏸️ Pauzeer Audio';
+    }).catch(() => {
+      if (btn) btn.innerText = '🔊 Tik om Audio te Spelen';
+    });
+  }
+}
+
+function toggleTVAudio(safeSrc, btnId) {
+  const btn = document.getElementById(btnId);
+  const info = document.getElementById(`${btnId}-info`);
+
+  if (!tvAudioPlayer.src || !tvAudioPlayer.src.endsWith(safeSrc)) {
+    tvAudioPlayer.src = safeSrc;
+    tvAudioPlayer.load();
+  }
+
+  tvAudioPlayer.onended = () => {
+    if (btn) btn.innerText = '🔊 Speel Opnieuw Af';
+  };
+  tvAudioPlayer.onerror = () => {
+    if (btn) btn.innerText = '❌ Audio niet gevonden';
+    if (info) info.innerText = `Kan bestand niet openen: ${decodeURI(safeSrc)}`;
+  };
+
+  if (tvAudioPlayer.paused) {
+    const p = tvAudioPlayer.play();
+    if (p && p.then) {
+      p.then(() => {
+        if (btn) btn.innerText = '⏸️ Pauzeer Audio';
+      }).catch((err) => {
+        if (info) info.innerText = `Fout bij afspelen: ${err.message || 'onbekend'}`;
+      });
+    }
   } else {
-    audio.pause();
-    if (btnEl) btnEl.innerText = '🔊 Speel Audio Af';
+    tvAudioPlayer.pause();
+    if (btn) btn.innerText = '🔊 Hervat Audio';
   }
 }
 
@@ -1210,10 +1282,9 @@ function revealQuestionOnTV() {
   mediaBox.innerHTML = '';
   if (currentQ.media && currentQ.type !== 'tekst') {
     mediaBox.style.display = 'flex';
-    mediaBox.innerHTML = buildMediaHTML(currentQ.type, currentQ.media, 'tv-q-audio-el');
+    mediaBox.innerHTML = buildMediaHTML(currentQ.type, currentQ.media, 'tv-q-audio-btn');
     if (currentQ.type === 'audio') {
-      const aEl = document.getElementById('tv-q-audio-el');
-      if (aEl) aEl.play().catch(() => {});
+      startTVAudio(currentQ.media, 'tv-q-audio-btn');
     }
   } else {
     mediaBox.style.display = 'none';
@@ -1286,10 +1357,9 @@ function renderAnswerMediaOnTV() {
   ansMediaBox.innerHTML = '';
   if (currentQ && currentQ.ansMedia && currentQ.ansType && currentQ.ansType !== 'tekst') {
     ansMediaBox.style.display = 'flex';
-    ansMediaBox.innerHTML = buildMediaHTML(currentQ.ansType, currentQ.ansMedia, 'tv-ans-audio-el');
+    ansMediaBox.innerHTML = buildMediaHTML(currentQ.ansType, currentQ.ansMedia, 'tv-ans-audio-btn');
     if (currentQ.ansType === 'audio') {
-      const aEl = document.getElementById('tv-ans-audio-el');
-      if (aEl) aEl.play().catch(() => {});
+      startTVAudio(currentQ.ansMedia, 'tv-ans-audio-btn');
     }
   } else {
     ansMediaBox.style.display = 'none';
@@ -1297,6 +1367,10 @@ function renderAnswerMediaOnTV() {
 }
 
 function stopTVMedia() {
+  try {
+    tvAudioPlayer.pause();
+    tvAudioPlayer.currentTime = 0;
+  } catch (e) {}
   const mediaBox = document.getElementById('tv-media-box');
   const ansMediaBox = document.getElementById('tv-answer-media-box');
   if (mediaBox) { mediaBox.innerHTML = ''; mediaBox.style.display = 'none'; }
@@ -1307,8 +1381,7 @@ function displayRegularResultsOnTV(verdicts) {
   const ov = document.getElementById('tv-question-overlay');
   ov.classList.add('has-results');
 
-  const qMediaBox = document.getElementById('tv-media-box');
-  if (qMediaBox) { qMediaBox.innerHTML = ''; qMediaBox.style.display = 'none'; }
+  stopTVMedia();
 
   const resBox = document.getElementById('tv-result-box');
   resBox.style.display = 'flex';
@@ -1540,7 +1613,9 @@ function handlePlayerIncomingData(data) {
       document.getElementById('m-answer-card').style.display = 'flex';
       document.getElementById('m-q-cat').innerText = data.activeKopduel ? '💥 KOPDUEL INSCHATTING' : data.question.cat.toUpperCase();
       document.getElementById('m-q-text').innerText = data.question.q;
-      document.getElementById('m-input-ans').value = '';
+      const inputEl = document.getElementById('m-input-ans');
+      inputEl.value = '';
+      inputEl.disabled = false;
       document.getElementById('m-btn-submit-ans').style.display = 'inline-flex';
       const skipBtn = document.getElementById('m-btn-skip-ans');
       if (skipBtn) skipBtn.style.display = data.activeKopduel ? 'none' : 'inline-flex';
@@ -1606,8 +1681,11 @@ function playerExecuteSteps() {
 }
 
 function playerSubmitAnswer() {
-  const ans = document.getElementById('m-input-ans').value.trim();
+  const inputEl = document.getElementById('m-input-ans');
+  const ans = inputEl.value.trim();
   if (!ans) return;
+  inputEl.disabled = true;
+  inputEl.blur();
   document.getElementById('m-btn-submit-ans').style.display = 'none';
   const skipBtn = document.getElementById('m-btn-skip-ans');
   if (skipBtn) skipBtn.style.display = 'none';
@@ -1616,6 +1694,10 @@ function playerSubmitAnswer() {
 }
 
 function playerSkipQuestion() {
+  const inputEl = document.getElementById('m-input-ans');
+  inputEl.value = '';
+  inputEl.disabled = true;
+  inputEl.blur();
   document.getElementById('m-btn-submit-ans').style.display = 'none';
   const skipBtn = document.getElementById('m-btn-skip-ans');
   if (skipBtn) skipBtn.style.display = 'none';

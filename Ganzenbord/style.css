@@ -276,7 +276,7 @@ html, body {
 .tile.cat-foto { border-color: #f472b6; background: linear-gradient(145deg, rgba(219,39,119,0.3), rgba(15,23,42,0.6)); }
 .tile.cat-algemeen { border-color: #4ade80; background: linear-gradient(145deg, rgba(22,163,74,0.3), rgba(15,23,42,0.6)); }
 .tile.cat-paspoort { border-color: #fb923c; background: linear-gradient(145deg, rgba(234,88,12,0.3), rgba(15,23,42,0.6)); }
-.tile.cat-marktwaarde, .tile.cat-transfers { border-color: #2dd4bf; background: linear-gradient(145deg, rgba(13,148,136,0.3), rgba(15,23,42,0.6)); }
+.tile.cat-waarde { border-color: #2dd4bf; background: linear-gradient(145deg, rgba(13,148,136,0.3), rgba(15,23,42,0.6)); }
 
 .tile.special {
   border: 2.5px solid var(--gold);
@@ -679,6 +679,7 @@ html, body {
 .scroll-box { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px; }
 .m-input { width: 100%; padding: 11px; border-radius: 10px; border: 2px solid #334155; background: #0f172a; color: #fff; font-size: 1rem; }
 .m-input:focus { border-color: var(--gold); outline: none; }
+.m-input:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .secret-ans-box { background: #422006; border: 2px solid var(--gold); border-radius: 12px; padding: 10px; color: #fef08a; font-weight: 700; }
 .cat-pill { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; padding: 8px 18px; border-radius: 20px; background: rgba(255,255,255,0.14); color: var(--gold); }
