@@ -421,7 +421,7 @@ html, body {
 #tv-question-overlay, #tv-special-overlay, #tv-free-play-overlay {
   inset: 14px 255px 14px 14px;
   border-radius: 14px;
-  padding: 12px;
+  padding: 10px;
   background: rgba(5, 12, 8, 0.96);
 }
 .overlay-box {
@@ -435,38 +435,36 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 #tv-question-overlay .overlay-box, #tv-special-overlay .overlay-box, #tv-free-play-overlay .overlay-box {
   max-width: 100%;
   width: 100%;
   height: 100%;
   justify-content: center;
-  padding: 20px 28px;
+  padding: 14px 20px;
+  overflow: hidden;
 }
 
-#tv-q-text { font-size: 2.15rem; font-weight: 800; line-height: 1.28; max-width: 96%; }
-#tv-question-overlay.has-results #tv-q-text { font-size: 1.4rem; }
+#tv-q-text { font-size: 1.95rem; font-weight: 800; line-height: 1.24; max-width: 98%; flex-shrink: 0; }
+#tv-question-overlay.has-results #tv-q-text { font-size: 1.25rem; }
 
-#tv-media-box, #tv-answer-media-box {
+.tv-media-stage {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
-#tv-media-box img, #tv-media-box video {
-  max-height: 54vh;
+.tv-fit-media {
+  width: 100%;
+  height: 100%;
   max-width: 100%;
-  border-radius: 14px;
-  border: 4px solid var(--gold);
+  max-height: 100%;
   object-fit: contain;
-}
-#tv-answer-media-box img, #tv-answer-media-box video {
-  max-height: 27vh;
-  max-width: 100%;
   border-radius: 12px;
-  border: 3px solid #10b981;
-  object-fit: contain;
 }
 
 #tv-result-box {
@@ -475,14 +473,15 @@ html, body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 .res-row-card {
   flex: 1 1 44%;
   max-width: 48%;
   border: 3px solid #fff;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 12px;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 .audio-player-wrap {
@@ -491,11 +490,11 @@ html, body {
   align-items: center;
   gap: 10px;
   background: rgba(255,255,255,0.06);
-  padding: 16px 24px;
+  padding: 18px 28px;
   border-radius: 14px;
   border: 2px solid var(--gold);
 }
-.audio-play-btn { font-size: 1.15rem; padding: 14px 28px; }
+.audio-play-btn { font-size: 1.2rem; padding: 14px 28px; }
 
 .free-play-grid {
   display: grid;
@@ -514,58 +513,68 @@ html, body {
 .var-tv-banner {
   position: absolute;
   inset: 14px 255px 14px 14px;
-  background: linear-gradient(135deg, #040d21 0%, #0b1f4d 50%, #040d21 100%);
+  background: #fde047;
   z-index: 350;
   border-radius: 14px;
-  border: 4px solid #38bdf8;
   display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 26px;
+}
+.knvb-var-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 14px solid #111827;
+  border-radius: 14px;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px;
+  gap: 10px;
+  color: #111827;
   text-align: center;
+  padding: 20px;
 }
-.eredivisie-var-frame {
-  width: 88%;
-  background: rgba(2, 6, 23, 0.85);
-  border: 3px solid #fff;
-  border-radius: 16px;
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 0 40px rgba(56, 189, 248, 0.35);
+.var-corner {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
 }
-.eredivisie-var-header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.var-logo-box {
-  background: #fff;
-  color: #040d21;
+.var-corner.tl { top: 14px; left: 14px; border-width: 28px 28px 0 0; border-color: #111827 transparent transparent transparent; }
+.var-corner.tr { top: 14px; right: 14px; border-width: 0 28px 28px 0; border-color: transparent #111827 transparent transparent; }
+.var-corner.bl { bottom: 14px; left: 14px; border-width: 28px 0 0 28px; border-color: transparent transparent transparent #111827; }
+.var-corner.br { bottom: 14px; right: 14px; border-width: 0 0 28px 28px; border-color: transparent transparent #111827 transparent; }
+
+.knvb-var-check {
+  font-size: 5.2rem;
   font-weight: 900;
-  font-size: 2.2rem;
-  padding: 4px 18px;
-  border-radius: 8px;
-  letter-spacing: 3px;
+  letter-spacing: 5px;
+  line-height: 1;
 }
-.var-league-label { font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; color: #93c5fd; }
-.var-status-bar {
-  width: 100%;
-  padding: 14px;
-  font-size: 2.2rem;
+.knvb-var-decision {
+  font-size: 3rem;
   font-weight: 900;
   letter-spacing: 3px;
-  border-radius: 10px;
-  background: #f59e0b;
-  color: #000;
+  line-height: 1.1;
 }
-.var-state-goal .var-status-bar { background: #10b981; color: #fff; }
-.var-state-offside .var-status-bar { background: #dc2626; color: #fff; }
-.var-main-title { font-size: 1.9rem; font-weight: 900; }
-.var-sub-text { font-size: 1.25rem; color: #e2e8f0; font-weight: 700; }
+.var-state-goal .knvb-var-decision { color: #047857; }
+.var-state-offside .knvb-var-decision { color: #b91c1c; }
+
+.knvb-var-arrows-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 8px;
+}
+.knvb-arrow { font-size: 4rem; font-weight: 900; line-height: 1; }
+.knvb-var-word { font-size: 3.6rem; font-weight: 900; letter-spacing: 4px; line-height: 1; }
+.knvb-var-sub { font-size: 1.25rem; font-weight: 900; margin-top: 6px; letter-spacing: 1px; }
+.knvb-var-footer { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+.knvb-badge-black { background: #111827; color: #fde047; font-weight: 900; font-size: 0.85rem; padding: 4px 10px; border-radius: 5px; }
+.knvb-badge-outline { border: 2px solid #111827; color: #111827; font-weight: 900; font-size: 0.8rem; padding: 3px 10px; border-radius: 5px; }
 
 .tv-card-overlay {
   position: absolute;
@@ -616,8 +625,8 @@ html, body {
 }
 .lobby-player-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; }
 
-.stakes-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
-.stake-pill { padding: 8px 18px; border-radius: 12px; font-weight: 800; font-size: 1.05rem; }
+.stakes-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; flex-shrink: 0; }
+.stake-pill { padding: 7px 16px; border-radius: 12px; font-weight: 800; font-size: 1rem; }
 .stake-good { background: rgba(16, 185, 129, 0.2); border: 2px solid #10b981; color: #6ee7b7; }
 .stake-bad { background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; color: #fca5a5; }
 
@@ -682,7 +691,7 @@ html, body {
 .m-input:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .secret-ans-box { background: #422006; border: 2px solid var(--gold); border-radius: 12px; padding: 10px; color: #fef08a; font-weight: 700; }
-.cat-pill { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; padding: 8px 18px; border-radius: 20px; background: rgba(255,255,255,0.14); color: var(--gold); }
+.cat-pill { font-size: 1.05rem; font-weight: 800; text-transform: uppercase; padding: 7px 16px; border-radius: 20px; background: rgba(255,255,255,0.14); color: var(--gold); flex-shrink: 0; }
 
 .free-q-pick-item {
   background: rgba(255,255,255,0.08);

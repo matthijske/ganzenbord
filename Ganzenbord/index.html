@@ -100,14 +100,23 @@
       </div>
 
       <div id="tv-var-overlay" class="var-tv-banner">
-        <div class="eredivisie-var-frame">
-          <div class="eredivisie-var-header">
-            <span id="tv-var-badge" class="var-logo-box">VAR</span>
-            <span class="var-league-label">EREDIVISIE • VIDEO ASSISTANT REFEREE</span>
+        <div class="knvb-var-screen">
+          <span class="var-corner tl"></span>
+          <span class="var-corner tr"></span>
+          <span class="var-corner bl"></span>
+          <span class="var-corner br"></span>
+          <div id="tv-var-status" class="knvb-var-check">CHECK</div>
+          <h2 id="tv-var-title" class="knvb-var-decision">DOELPUNT</h2>
+          <div class="knvb-var-arrows-row">
+            <span class="knvb-arrow">←</span>
+            <span class="knvb-var-word">VAR</span>
+            <span class="knvb-arrow">→</span>
           </div>
-          <div id="tv-var-status" class="var-status-bar">CHECKING...</div>
-          <h2 id="tv-var-title" class="var-main-title">VAR CHECK</h2>
-          <p id="tv-var-sub" class="var-sub-text">De Scheids controleert het antwoord op internet</p>
+          <p id="tv-var-sub" class="knvb-var-sub"></p>
+          <div class="knvb-var-footer">
+            <span class="knvb-badge-black">📺 VAR</span>
+            <span class="knvb-badge-outline">EREDIVISIE</span>
+          </div>
         </div>
       </div>
 
@@ -158,16 +167,16 @@
     </div>
 
     <div id="tv-question-overlay" class="tv-overlay" style="display: none;">
-      <div class="overlay-box">
+      <div class="overlay-box question-full-box">
         <div id="tv-q-cat" class="cat-pill">Categorie</div>
         <div class="stakes-row" id="tv-stakes-row">
           <div class="stake-pill stake-good" id="tv-stake-good">✅ Goed: Deel 3 slokken uit</div>
           <div class="stake-pill stake-bad" id="tv-stake-bad">❌ Fout: Neem 3 slokken</div>
         </div>
         <h2 id="tv-q-text" style="display: none;">Vraagtekst...</h2>
-        <div id="tv-media-box" style="display: none;"></div>
+        <div id="tv-media-box" class="tv-media-stage" style="display: none;"></div>
         <div id="tv-result-box" style="display: none;"></div>
-        <div id="tv-answer-media-box" style="display: none;"></div>
+        <div id="tv-answer-media-box" class="tv-media-stage" style="display: none;"></div>
         <div id="tv-q-status" style="font-size: 1.15rem; color: var(--gold); font-weight: 700;">Wachten op de Scheids...</div>
       </div>
     </div>

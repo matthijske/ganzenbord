@@ -1,5 +1,6 @@
 const PLAYER_COLORS = ['#ef4444', '#3b82f6', '#eab308', '#22c55e', '#ec4899', '#06b6d4', '#f97316'];
 const RO_FLAG_SVG = `<svg viewBox="0 0 3 2" style="width:1.15em;height:0.8em;vertical-align:-0.12em;border-radius:2px;display:inline-block;box-shadow:0 0 2px rgba(0,0,0,0.6);"><rect width="1" height="2" x="0" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/></svg>`;
+const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
 
 let PLAYERS = [];
 let gameStarted = false;
@@ -23,6 +24,12 @@ let selectedFreeCatId = '';
 
 const tvAudioPlayer = new Audio();
 tvAudioPlayer.preload = 'auto';
+const tvVideoPlayer = document.createElement('video');
+tvVideoPlayer.preload = 'auto';
+tvVideoPlayer.playsInline = true;
+tvVideoPlayer.controls = true;
+tvVideoPlayer.className = 'tv-fit-media';
+let activeTVMediaType = '';
 
 const DICE_ROTATIONS = {
   1: { x: 0, y: 0 },
@@ -34,23 +41,23 @@ const DICE_ROTATIONS = {
 };
 
 const CATEGORIES = [
-  { id: 'roemenie',    name: `${RO_FLAG_SVG} Roemenië`, short: 'Roemenië',    icon: RO_FLAG_SVG },
-  { id: 'wk',          name: '🌍 Het WK',               short: 'Het WK',      icon: '🌍' },
-  { id: 'video_audio', name: '🎬 Video & Audio',        short: 'Media',       icon: '🎬' },
-  { id: 'foto',        name: '📸 Foto',                 short: 'Foto',        icon: '📸' },
-  { id: 'algemeen',    name: '⚽ Algemeen',             short: 'Algemeen',    icon: '⚽' },
-  { id: 'paspoort',    name: '🪪 Spelerspaspoort',      short: 'Paspoort',    icon: '🪪' },
-  { id: 'waarde',      name: '💶 Marktwaarde',          short: 'Waarde',      icon: '💶' }
+  { id: 'roemenie',    name: `${RO_FLAG_SVG} Roemenië`, short: 'Roemenië', icon: RO_FLAG_SVG },
+  { id: 'wk',          name: '🌍 Het WK',               short: 'Het WK',   icon: '🌍' },
+  { id: 'video_audio', name: '🎬 Video & Audio',        short: 'Media',    icon: '🎬' },
+  { id: 'foto',        name: '📸 Foto',                 short: 'Foto',     icon: '📸' },
+  { id: 'algemeen',    name: '⚽ Algemeen',             short: 'Algemeen', icon: '⚽' },
+  { id: 'paspoort',    name: '🪪 Spelerspaspoort',      short: 'Paspoort', icon: '🪪' },
+  { id: 'waarde',      name: '💶 Marktwaarde',          short: 'Waarde',   icon: '💶' }
 ];
 
 const SPECIAL_TILES = {
   1:  { type: 'start',   icon: '🛖', short: 'Dugout',        title: 'De Dugout (Start)', desc: 'Hier begint de wedstrijd!' },
   6:  { type: 'special', icon: '⚡', short: 'Counter -> 12', title: 'De Snelle Counter!', desc: 'Je snijdt door de defensie: vlieg direct door naar Vak 12 én deel 3 slokken uit!', action: 'JUMP', target: 12 },
-  17: { type: 'special', icon: '💵', short: 'Omkoping',      title: 'Steekpenningen voor de Scheids!', desc: 'De Scheidsrechter drinkt verplicht 2 slokken (of een shotje)! Jij gaat 2 vakjes extra vooruit.', action: 'MOVE_REL', offset: 2 },
+  17: { type: 'special', icon: '💵', short: 'Omkoping',      title: 'Steekpenningen voor de Scheids!', desc: 'De Scheids drinkt verplicht 2 slokken (of een shotje)! Jij gaat 2 vakjes extra vooruit.', action: 'MOVE_REL', offset: 2 },
   24: { type: 'special', icon: '🍺', short: 'Kater 09:30',   title: 'Kater van de Vrijdagnacht!', desc: 'Kies: 1 beurt overslaan op de bank ÓF direct 4 slokken adten om door te spelen!', action: 'CHOICE_KATER' },
   31: { type: 'special', icon: '🩼', short: 'Kruisband',     title: 'Kruisbandblessure!', desc: 'Kermend op het gras: 3 beurten overslaan én trek een Atje!', action: 'SKIP', turns: 3 },
   33: { type: 'special', icon: '🫖', short: 'Lauwe Thee',    title: 'Te Veel Thee in de Rust!', desc: 'Te laat voor de 2e helft: 1 beurt overslaan én 3 slokken drinken!', action: 'SKIP', turns: 1 },
-  38: { type: 'special', icon: '🤬', short: 'Kritiek',       title: 'Kritiek op de Leiding!', desc: 'Kop-of-munt duel met de Scheidsrechter! De verliezer neemt direct 3 slokken.', action: 'NONE' },
+  38: { type: 'special', icon: '🤬', short: 'Kritiek',       title: 'Kritiek op de Leiding!', desc: 'Kop-of-munt duel met de Scheids! De verliezer neemt direct 3 slokken.', action: 'NONE' },
   41: { type: 'special', icon: '😴', short: 'Slapende VAR',  title: 'De VAR Ligt te Slapen!', desc: 'Je scoort een zuivere buitenspelgoal! Vlieg door naar Vak 47 én deel 2 shotjes uit!', action: 'JUMP', target: 47 },
   46: { type: 'special', icon: '🔄', short: 'Wissel 80\'',   title: 'Tactische Wissel!', desc: 'Je ruilt van plek met de speler die direct achter je staat (die speler neemt 2 slokken)!', action: 'SWAP_BEHIND' },
   52: { type: 'special', icon: '🟥', short: 'Rode Kaart',    title: 'Directe Rode Kaart!', desc: 'Natrappen! 1 beurt schorsing én neem een Shotje!', action: 'SKIP', turns: 1 },
@@ -98,51 +105,20 @@ function computeSpiralCoordinates(cols, rows) {
 }
 
 let QUESTION_POOLS = {
-  roemenie: [
-    { idKey: 'def_ro_1', cat: 'roemenie', priority: 1, type: 'tekst', media: '', q: 'Welke Roemeense club won in 1986 de Europacup 1 door FC Barcelona na penalty\'s te verslaan?', a: 'Steaua Boekarest', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
-  ],
-  wk: [
-    { idKey: 'def_wk_1', cat: 'wk', priority: 1, type: 'tekst', media: '', q: 'In welk Zuid-Amerikaans land werd in 1930 het allereerste WK voetbal georganiseerd?', a: 'Uruguay', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
-  ],
-  video_audio: [
-    { idKey: 'def_va_1', cat: 'video_audio', priority: 1, type: 'tekst', media: '', q: 'Maak het legendarische commentaar van Jack van Gelder in 1998 af: "DENNIS BERGKAMP! DENNIS BERGKAMP! ..."', a: 'BERRRGKAMP!', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: true }
-  ],
-  foto: [
-    { idKey: 'def_fo_1', cat: 'foto', priority: 1, type: 'tekst', media: '', q: 'Welke Braziliaanse spits droeg tijdens het WK 2002 het iconische driehoekje voorop zijn verder kale hoofd?', a: 'Ronaldo (R9)', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
-  ],
-  algemeen: [
-    { idKey: 'def_al_1', cat: 'algemeen', priority: 1, type: 'tekst', media: '', q: 'Welke club won de Champions League drie keer op rij tussen 2016 en 2018?', a: 'Real Madrid', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
-  ],
-  paspoort: [
-    { idKey: 'def_pa_1', cat: 'paspoort', priority: 1, type: 'tekst', media: '', q: 'Spelerspaspoort: FC Groningen -> PSV -> Chelsea -> Real Madrid -> Bayern München. Wie ben ik?', a: 'Arjen Robben', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
-  ],
-  waarde: [
-    { idKey: 'def_wa_1', cat: 'waarde', priority: 1, type: 'tekst', media: '', q: 'Voor welk recordbedrag (in miljoenen euro\'s) vertrok Neymar in 2017 van Barcelona naar PSG?', a: '222 miljoen euro', ansType: 'tekst', ansMedia: '', good: 'Deel 3 slokken uit', bad: 'Neem 3 slokken', group: false }
-  ],
-  kopduel: [
-    { idKey: 'def_kd_1', cat: 'kopduel', priority: 1, type: 'tekst', media: '', q: 'Inschattingsvraag: Hoeveel officiële interlands speelde Gheorghe Hagi voor Roemenië?', a: '124 interlands', ansType: 'tekst', ansMedia: '', good: 'Winnaar +1 vak', bad: 'Verliezer -1 vak & Shotje', group: true }
-  ]
+  roemenie: [],
+  wk: [],
+  video_audio: [],
+  foto: [],
+  algemeen: [],
+  paspoort: [],
+  waarde: [],
+  kopduel: []
 };
-let BACKUP_POOLS = JSON.parse(JSON.stringify(QUESTION_POOLS));
-
-function cleanMediaPath(raw) {
-  return (raw || '').trim().replace(/^["']|["']$/g, '').replace(/\\/g, '/');
-}
-
-function resolveMediaType(rawType, path) {
-  const t = (rawType || '').trim().toLowerCase();
-  const p = (path || '').toLowerCase();
-  if (!p) return 'tekst';
-  if (['audio', 'mp3', 'm4a', 'muziek', 'geluid'].includes(t) || /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/.test(p)) return 'audio';
-  if (['video', 'mp4', 'mov'].includes(t) || /\.(mp4|webm|mov|m4v)(\?.*)?$/.test(p)) return 'video';
-  if (['foto', 'image', 'afbeelding', 'img'].includes(t) || /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/.test(p)) return 'foto';
-  return t || 'tekst';
-}
 
 async function loadQuestionsFromCSV() {
   try {
     const res = await fetch('vragen.csv?t=' + Date.now());
-    if (!res.ok) throw new Error('Geen vragen.csv gevonden');
+    if (!res.ok) throw new Error('Kan vragen.csv niet laden');
     const text = await res.text();
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
     if (lines.length < 2) return;
@@ -151,60 +127,39 @@ async function loadQuestionsFromCSV() {
 
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(';');
-      if (cols.length < 6) continue;
-      const cat = cols[0].trim().toLowerCase();
-
-      let priority = 2, type = 'tekst', media = '', q = '', a = '', ansType = 'tekst', ansMedia = '', good = 'Deel 3 slokken uit', bad = 'Neem 3 slokken', group = false;
-
-      if (cols.length >= 11) {
-        priority = parseInt((cols[1] || '2').trim(), 10) || 2;
-        media    = cleanMediaPath(cols[3]);
-        type     = resolveMediaType(cols[2], media);
-        q        = (cols[4] || '').trim();
-        a        = (cols[5] || '').trim();
-        ansMedia = cleanMediaPath(cols[7]);
-        ansType  = resolveMediaType(cols[6], ansMedia);
-        good     = (cols[8] || 'Deel 3 slokken uit').trim();
-        bad      = (cols[9] || 'Neem 3 slokken').trim();
-        group    = (cols[10] || 'NEE').trim().toUpperCase() === 'JA';
-      } else {
-        media = cleanMediaPath(cols[2]);
-        type  = resolveMediaType(cols[1], media);
-        q     = (cols[3] || '').trim();
-        a     = (cols[4] || '').trim();
-        good  = (cols[5] || 'Deel 3 slokken uit').trim();
-        bad   = (cols[6] || 'Neem 3 slokken').trim();
-        group = (cols[7] || 'NEE').trim().toUpperCase() === 'JA';
-      }
+      if (cols.length < 11) continue;
+      const cat      = cols[0].trim();
+      const priority = parseInt(cols[1].trim(), 10) || 2;
+      const type     = cols[2].trim();
+      const media    = cols[3].trim();
+      const q        = cols[4].trim();
+      const a        = cols[5].trim();
+      const ansType  = cols[6].trim();
+      const ansMedia = cols[7].trim();
+      const good     = cols[8].trim() || 'Deel 3 slokken uit';
+      const bad      = cols[9].trim() || 'Neem 3 slokken';
+      const group    = cols[10].trim().toUpperCase() === 'JA';
 
       if (freshPools[cat] && q) {
         freshPools[cat].push({ idKey: `${cat}_${i}_${q.slice(0, 25)}`, cat, priority, type, media, q, a, ansType, ansMedia, good, bad, group });
       }
     }
 
-    Object.keys(freshPools).forEach(k => {
-      if (freshPools[k].length > 0) QUESTION_POOLS[k] = freshPools[k];
-    });
-    BACKUP_POOLS = JSON.parse(JSON.stringify(QUESTION_POOLS));
+    QUESTION_POOLS = freshPools;
+    const total = Object.values(freshPools).reduce((s, arr) => s + arr.length, 0);
     const statusEl = document.getElementById('tv-csv-status');
-    if (statusEl) statusEl.innerText = `✅ vragen.csv geladen (${lines.length - 1} vragen klaar!)`;
+    if (statusEl) statusEl.innerText = `✅ vragen.csv geladen (${total} vragen klaar!)`;
   } catch (err) {
     const statusEl = document.getElementById('tv-csv-status');
-    if (statusEl) statusEl.innerText = `ℹ️ Standaard vragen actief (plaats vragen.csv voor eigen vragen)`;
+    if (statusEl) statusEl.innerText = `❌ Fout bij laden van vragen.csv`;
   }
 }
 
-function drawUniqueQuestion(catId, allowRefill = false) {
+function drawUniqueQuestion(catId) {
   let pool = QUESTION_POOLS[catId] || [];
-  pool = pool.filter(item => !askedQuestionKeys.has(item.idKey || item.q));
+  pool = pool.filter(item => !askedQuestionKeys.has(item.idKey));
   QUESTION_POOLS[catId] = pool;
-
-  if (pool.length === 0 && allowRefill && !freePlayMode) {
-    const backup = JSON.parse(JSON.stringify(BACKUP_POOLS[catId] || BACKUP_POOLS.algemeen || []));
-    QUESTION_POOLS[catId] = backup;
-    pool = QUESTION_POOLS[catId];
-  }
-  if (!pool || pool.length === 0) return null;
+  if (pool.length === 0) return null;
 
   const prio1Items = pool.filter(item => item.priority === 1);
   const candidatePool = prio1Items.length > 0 ? prio1Items : pool;
@@ -212,16 +167,16 @@ function drawUniqueQuestion(catId, allowRefill = false) {
   const exactIndex = pool.indexOf(picked);
   if (exactIndex > -1) pool.splice(exactIndex, 1);
 
-  askedQuestionKeys.add(picked.idKey || picked.q);
+  askedQuestionKeys.add(picked.idKey);
   return picked;
 }
 
 function drawSpecificQuestion(catId, idKey) {
-  let pool = QUESTION_POOLS[catId] || [];
-  const idx = pool.findIndex(item => (item.idKey || item.q) === idKey);
+  const pool = QUESTION_POOLS[catId] || [];
+  const idx = pool.findIndex(item => item.idKey === idKey);
   if (idx === -1) return null;
   const picked = pool.splice(idx, 1)[0];
-  askedQuestionKeys.add(picked.idKey || picked.q);
+  askedQuestionKeys.add(picked.idKey);
   return picked;
 }
 
@@ -230,13 +185,13 @@ function getRemainingQuestionsCatalog() {
   const catalog = {};
   [...CATEGORIES.map(c => c.id), 'kopduel'].forEach(id => {
     const pool = (QUESTION_POOLS[id] || [])
-      .filter(item => !askedQuestionKeys.has(item.idKey || item.q))
-      .sort((a, b) => (a.priority || 2) - (b.priority || 2));
+      .filter(item => !askedQuestionKeys.has(item.idKey))
+      .sort((a, b) => a.priority - b.priority);
     QUESTION_POOLS[id] = pool;
     counts[id] = pool.length;
     catalog[id] = pool.map(item => ({
-      idKey: item.idKey || item.q,
-      priority: item.priority || 2,
+      idKey: item.idKey,
+      priority: item.priority,
       q: item.q,
       a: item.a
     }));
@@ -256,27 +211,36 @@ function makeRoomCode() {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
-function unlockTabletAudio() {
+function unlockTabletMedia() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();
+  } catch (e) {}
+
+  try {
+    tvAudioPlayer.src = SILENT_WAV;
     tvAudioPlayer.muted = true;
-    const p = tvAudioPlayer.play();
-    if (p && p.then) {
-      p.then(() => {
-        tvAudioPlayer.pause();
-        tvAudioPlayer.muted = false;
-      }).catch(() => {
-        tvAudioPlayer.muted = false;
-      });
+    const pa = tvAudioPlayer.play();
+    if (pa && pa.then) {
+      pa.then(() => { tvAudioPlayer.pause(); tvAudioPlayer.muted = false; }).catch(() => { tvAudioPlayer.muted = false; });
     } else {
       tvAudioPlayer.muted = false;
+    }
+  } catch (e) {}
+
+  try {
+    tvVideoPlayer.muted = true;
+    const pv = tvVideoPlayer.play();
+    if (pv && pv.then) {
+      pv.then(() => { tvVideoPlayer.pause(); tvVideoPlayer.muted = false; }).catch(() => { tvVideoPlayer.muted = false; });
+    } else {
+      tvVideoPlayer.muted = false;
     }
   } catch (e) {}
 }
 
 function initTV() {
-  unlockTabletAudio();
+  unlockTabletMedia();
   myRole = 'tv';
   document.getElementById('view-select').style.display = 'none';
   document.getElementById('tv-view').style.display = 'block';
@@ -677,6 +641,9 @@ function handleTVIncomingData(data, conn) {
   else if (data.type === 'REF_SHOW_QUESTION') {
     revealQuestionOnTV();
   }
+  else if (data.type === 'REF_MEDIA_CONTROL') {
+    controlTVMedia(data.action);
+  }
   else if (data.type === 'PLAYER_SUBMIT_ANSWER') {
     receivedAnswers[data.playerId] = data.ans;
     const p = PLAYERS.find(x => x.id === data.playerId);
@@ -983,12 +950,7 @@ function resolveSpecialTileEffect(data) {
 
   const tile = BOARD_TILES[player.pos - 1];
 
-  const finishOrKopduel = () => {
-    const others = PLAYERS.filter(p => p.id !== player.id && p.pos === player.pos && p.pos > 1 && p.pos < 63);
-    if (others.length > 0) {
-      prepareKopduelPreviewOnTV(player, others[0]);
-      return;
-    }
+  const finishTurn = () => {
     currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
     renderTokens();
     updateTVLeaderboard();
@@ -997,17 +959,17 @@ function resolveSpecialTileEffect(data) {
 
   if (data.choice === 'KATER_SKIP') {
     player.skipTurns += 1;
-    finishOrKopduel();
+    finishTurn();
   } else if (data.choice === 'KATER_DRINK') {
-    finishOrKopduel();
+    finishTurn();
   } else if (tile.action === 'JUMP') {
-    animatePlayerJumpToTarget(player, tile.target, finishOrKopduel);
+    animatePlayerJumpToTarget(player, tile.target, () => evaluateTileArrival(player));
   } else if (tile.action === 'MOVE_REL') {
     const newTarget = Math.max(1, Math.min(63, player.pos + tile.offset));
-    animatePlayerJumpToTarget(player, newTarget, finishOrKopduel);
+    animatePlayerJumpToTarget(player, newTarget, () => evaluateTileArrival(player));
   } else if (tile.action === 'SKIP') {
     player.skipTurns += tile.turns;
-    finishOrKopduel();
+    finishTurn();
   } else if (tile.action === 'SWAP_BEHIND') {
     const behind = PLAYERS.filter(p => p.id !== player.id && p.pos < player.pos).sort((a, b) => b.pos - a.pos);
     if (behind.length > 0) {
@@ -1015,12 +977,12 @@ function resolveSpecialTileEffect(data) {
       const myOldPos = player.pos;
       const targetOldPos = targetP.pos;
       targetP.pos = myOldPos;
-      animatePlayerJumpToTarget(player, targetOldPos, finishOrKopduel);
+      animatePlayerJumpToTarget(player, targetOldPos, () => evaluateTileArrival(player));
     } else {
-      finishOrKopduel();
+      finishTurn();
     }
   } else {
-    finishOrKopduel();
+    finishTurn();
   }
 }
 
@@ -1033,7 +995,7 @@ function prepareKopduelPreviewOnTV(roller, defender) {
     p2Name: defender.name,
     rollerId: roller.id
   };
-  currentQ = drawUniqueQuestion('kopduel', true);
+  currentQ = drawUniqueQuestion('kopduel');
   receivedAnswers = {};
   roundVerdicts = {};
 
@@ -1127,7 +1089,14 @@ function continueAfterKopduelMoveOnTV() {
 function prepareCategoryPreviewOnTV(player, tileObj) {
   stopTVMedia();
   activeKopduel = null;
-  currentQ = drawUniqueQuestion(tileObj.cat, true);
+  currentQ = drawUniqueQuestion(tileObj.cat);
+  if (!currentQ) {
+    currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
+    renderTokens();
+    updateTVLeaderboard();
+    sendBoardWaitState();
+    return;
+  }
   receivedAnswers = {};
   roundVerdicts = {};
 
@@ -1146,7 +1115,7 @@ function prepareCategoryPreviewOnTV(player, tileObj) {
 function prepareFreePlayQuestionOnTV(catId, idKey) {
   stopTVMedia();
   activeKopduel = null;
-  currentQ = idKey ? drawSpecificQuestion(catId, idKey) : drawUniqueQuestion(catId, false);
+  currentQ = idKey ? drawSpecificQuestion(catId, idKey) : drawUniqueQuestion(catId);
   if (!currentQ) {
     const rem = getRemainingQuestionsCatalog();
     renderTVFreePlayOverlay(rem.counts);
@@ -1172,80 +1141,103 @@ function prepareFreePlayQuestionOnTV(catId, idKey) {
   });
 }
 
-function buildMediaHTML(type, mediaPath, btnId) {
-  const safeSrc = encodeURI(cleanMediaPath(mediaPath));
+function mountTVMedia(type, mediaPath, containerEl) {
+  stopActiveMediaPlayback();
+  containerEl.innerHTML = '';
+  if (!mediaPath || type === 'tekst') {
+    containerEl.style.display = 'none';
+    return;
+  }
+
+  const src = mediaPath;
+  containerEl.style.display = 'flex';
+
   if (type === 'foto') {
-    return `<img src="${safeSrc}" alt="Media">`;
+    activeTVMediaType = 'foto';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = 'Media';
+    img.className = 'tv-fit-media';
+    containerEl.appendChild(img);
   } else if (type === 'video') {
-    return `<video src="${safeSrc}" controls playsinline preload="auto"></video>`;
+    activeTVMediaType = 'video';
+    tvVideoPlayer.muted = false;
+    tvVideoPlayer.src = src;
+    tvVideoPlayer.currentTime = 0;
+    tvVideoPlayer.load();
+    containerEl.appendChild(tvVideoPlayer);
   } else if (type === 'audio') {
-    return `
+    activeTVMediaType = 'audio';
+    tvAudioPlayer.muted = false;
+    tvAudioPlayer.src = src;
+    tvAudioPlayer.currentTime = 0;
+    tvAudioPlayer.load();
+    tvAudioPlayer.onended = () => {
+      const btn = document.getElementById('tv-audio-status-btn');
+      if (btn) btn.innerText = '🔊 Audio Afgelopen (Opnieuw)';
+    };
+    containerEl.innerHTML = `
       <div class="audio-player-wrap">
-        <button id="${btnId}" class="btn btn-yellow audio-play-btn" onclick="toggleTVAudio('${safeSrc.replace(/'/g, "\\'")}', '${btnId}')">🔊 Speel Audio Af</button>
-        <div id="${btnId}-info" style="font-size:0.78rem; opacity:0.8;">${cleanMediaPath(mediaPath)}</div>
+        <button id="tv-audio-status-btn" class="btn btn-yellow audio-play-btn" onclick="controlTVMedia('TOGGLE')">🔊 Audio Klaar (Wachten op Play)</button>
       </div>
     `;
   }
-  return '';
 }
 
-function startTVAudio(mediaPath, btnId) {
-  const safeSrc = encodeURI(cleanMediaPath(mediaPath));
-  const btn = document.getElementById(btnId);
-  const info = document.getElementById(`${btnId}-info`);
-  tvAudioPlayer.pause();
-  tvAudioPlayer.src = safeSrc;
-  tvAudioPlayer.currentTime = 0;
-  tvAudioPlayer.load();
-
-  tvAudioPlayer.onended = () => {
-    if (btn) btn.innerText = '🔊 Speel Opnieuw Af';
-  };
-  tvAudioPlayer.onerror = () => {
-    if (btn) btn.innerText = '❌ Audio niet gevonden';
-    if (info) info.innerText = `Controleer pad: ${cleanMediaPath(mediaPath)}`;
+function playMediaReliably(mediaEl, onPlaying) {
+  const tryPlay = () => {
+    mediaEl.muted = false;
+    const p = mediaEl.play();
+    if (p && p.then) {
+      p.then(() => {
+        if (onPlaying) onPlaying();
+      }).catch(() => {});
+    } else if (onPlaying) {
+      onPlaying();
+    }
   };
 
-  const p = tvAudioPlayer.play();
-  if (p && p.then) {
-    p.then(() => {
-      if (btn) btn.innerText = '⏸️ Pauzeer Audio';
-    }).catch(() => {
-      if (btn) btn.innerText = '🔊 Tik om Audio te Spelen';
+  if (mediaEl.readyState >= 2) {
+    tryPlay();
+  } else {
+    const onReady = () => {
+      mediaEl.removeEventListener('canplay', onReady);
+      tryPlay();
+    };
+    mediaEl.addEventListener('canplay', onReady);
+    mediaEl.load();
+  }
+}
+
+function controlTVMedia(action) {
+  const mediaEl = activeTVMediaType === 'audio' ? tvAudioPlayer : (activeTVMediaType === 'video' ? tvVideoPlayer : null);
+  if (!mediaEl) return;
+  const audioBtn = document.getElementById('tv-audio-status-btn');
+
+  if (action === 'TOGGLE') {
+    action = mediaEl.paused ? 'PLAY' : 'PAUSE';
+  }
+
+  if (action === 'PLAY') {
+    playMediaReliably(mediaEl, () => {
+      if (audioBtn) audioBtn.innerText = '⏸️ Audio Speelt Af...';
+    });
+  } else if (action === 'PAUSE') {
+    mediaEl.pause();
+    if (audioBtn) audioBtn.innerText = '🔊 Audio Gepauzeerd';
+  } else if (action === 'RESTART') {
+    mediaEl.currentTime = 0;
+    playMediaReliably(mediaEl, () => {
+      if (audioBtn) audioBtn.innerText = '⏸️ Audio Speelt Af...';
     });
   }
 }
 
-function toggleTVAudio(safeSrc, btnId) {
-  const btn = document.getElementById(btnId);
-  const info = document.getElementById(`${btnId}-info`);
-
-  if (!tvAudioPlayer.src || !tvAudioPlayer.src.endsWith(safeSrc)) {
-    tvAudioPlayer.src = safeSrc;
-    tvAudioPlayer.load();
-  }
-
-  tvAudioPlayer.onended = () => {
-    if (btn) btn.innerText = '🔊 Speel Opnieuw Af';
-  };
-  tvAudioPlayer.onerror = () => {
-    if (btn) btn.innerText = '❌ Audio niet gevonden';
-    if (info) info.innerText = `Kan bestand niet openen: ${decodeURI(safeSrc)}`;
-  };
-
-  if (tvAudioPlayer.paused) {
-    const p = tvAudioPlayer.play();
-    if (p && p.then) {
-      p.then(() => {
-        if (btn) btn.innerText = '⏸️ Pauzeer Audio';
-      }).catch((err) => {
-        if (info) info.innerText = `Fout bij afspelen: ${err.message || 'onbekend'}`;
-      });
-    }
-  } else {
-    tvAudioPlayer.pause();
-    if (btn) btn.innerText = '🔊 Hervat Audio';
-  }
+function stopActiveMediaPlayback() {
+  activeTVMediaType = '';
+  try { tvAudioPlayer.pause(); } catch (e) {}
+  try { tvVideoPlayer.pause(); } catch (e) {}
+  if (tvVideoPlayer.parentNode) tvVideoPlayer.parentNode.removeChild(tvVideoPlayer);
 }
 
 function revealQuestionOnTV() {
@@ -1279,16 +1271,7 @@ function revealQuestionOnTV() {
   document.getElementById('tv-q-text').innerText = currentQ.q;
 
   const mediaBox = document.getElementById('tv-media-box');
-  mediaBox.innerHTML = '';
-  if (currentQ.media && currentQ.type !== 'tekst') {
-    mediaBox.style.display = 'flex';
-    mediaBox.innerHTML = buildMediaHTML(currentQ.type, currentQ.media, 'tv-q-audio-btn');
-    if (currentQ.type === 'audio') {
-      startTVAudio(currentQ.media, 'tv-q-audio-btn');
-    }
-  } else {
-    mediaBox.style.display = 'none';
-  }
+  mountTVMedia(currentQ.type, currentQ.media, mediaBox);
 
   document.getElementById('tv-q-status').innerText = activeKopduel
     ? `${activeKopduel.p1Name} & ${activeKopduel.p2Name} vullen nu hun inschatting in...`
@@ -1308,10 +1291,9 @@ function triggerVarCheckOnTV(player) {
   if (!varOv) return;
   varOv.style.display = 'flex';
   varOv.className = 'var-tv-banner var-state-checking';
-  document.getElementById('tv-var-badge').innerText = 'VAR';
-  document.getElementById('tv-var-status').innerText = 'CHECKING...';
-  document.getElementById('tv-var-title').innerText = `${player.name.toUpperCase()} VRAAGT DE VAR AAN`;
-  document.getElementById('tv-var-sub').innerText = 'De Scheids controleert het antwoord op internet';
+  document.getElementById('tv-var-status').innerText = 'CHECK';
+  document.getElementById('tv-var-title').innerText = 'DOELPUNT';
+  document.getElementById('tv-var-sub').innerText = `${player.name.toUpperCase()} VRAAGT VAR AAN`;
   playAudioBeep(520, 0.3);
 }
 
@@ -1326,9 +1308,9 @@ function resolveVarDecisionOnTV(playerId, decision) {
     if (roundVerdicts[playerId]) roundVerdicts[playerId].correct = true;
     if (varOv) {
       varOv.className = 'var-tv-banner var-state-goal';
-      statusEl.innerText = '⚽ DOELPUNT!';
-      title.innerText = `${p ? p.name.toUpperCase() : 'SPELER'} HEEFT GELIJK`;
-      sub.innerText = 'BESLISSING: GOED • DE SCHEIDS MOET EEN ATJE TREKKEN! 🍺';
+      statusEl.innerText = 'CHECK OVER';
+      title.innerText = 'DOELPUNT';
+      sub.innerText = `${p ? p.name.toUpperCase() : 'SPELER'} HEEFT GELIJK • SCHEIDS DOET EEN ATJE! 🍺`;
     }
     confetti({ particleCount: 150, spread: 85, origin: { y: 0.6 } });
     playAudioBeep(780, 0.35);
@@ -1336,9 +1318,9 @@ function resolveVarDecisionOnTV(playerId, decision) {
     if (roundVerdicts[playerId]) roundVerdicts[playerId].correct = false;
     if (varOv) {
       varOv.className = 'var-tv-banner var-state-offside';
-      statusEl.innerText = '🚩 GEEN DOELPUNT - BUITENSPEL';
-      title.innerText = `${p ? p.name.toUpperCase() : 'SPELER'} ZAT ERNAAST`;
-      sub.innerText = `BESLISSING: FOUT • ${p ? p.name.toUpperCase() : 'SPELER'} NEEMT DIRECT EEN SHOTJE! 🥃`;
+      statusEl.innerText = 'CHECK OVER';
+      title.innerText = 'BUITENSPEL';
+      sub.innerText = `${p ? p.name.toUpperCase() : 'SPELER'} NEEMT DIRECT EEN SHOTJE! 🥃`;
     }
     playAudioBeep(220, 0.45);
   }
@@ -1348,29 +1330,17 @@ function resolveVarDecisionOnTV(playerId, decision) {
     if (currentQ && Object.keys(roundVerdicts).length > 0) {
       displayRegularResultsOnTV(roundVerdicts);
     }
-  }, 3600);
+  }, 3800);
 }
 
 function renderAnswerMediaOnTV() {
   const ansMediaBox = document.getElementById('tv-answer-media-box');
   if (!ansMediaBox) return;
-  ansMediaBox.innerHTML = '';
-  if (currentQ && currentQ.ansMedia && currentQ.ansType && currentQ.ansType !== 'tekst') {
-    ansMediaBox.style.display = 'flex';
-    ansMediaBox.innerHTML = buildMediaHTML(currentQ.ansType, currentQ.ansMedia, 'tv-ans-audio-btn');
-    if (currentQ.ansType === 'audio') {
-      startTVAudio(currentQ.ansMedia, 'tv-ans-audio-btn');
-    }
-  } else {
-    ansMediaBox.style.display = 'none';
-  }
+  mountTVMedia(currentQ.ansType, currentQ.ansMedia, ansMediaBox);
 }
 
 function stopTVMedia() {
-  try {
-    tvAudioPlayer.pause();
-    tvAudioPlayer.currentTime = 0;
-  } catch (e) {}
+  stopActiveMediaPlayback();
   const mediaBox = document.getElementById('tv-media-box');
   const ansMediaBox = document.getElementById('tv-answer-media-box');
   if (mediaBox) { mediaBox.innerHTML = ''; mediaBox.style.display = 'none'; }
@@ -1586,8 +1556,8 @@ function handlePlayerIncomingData(data) {
     resetMobileBackground();
     hideAllMobileCards();
     document.getElementById('m-wait-turn-card').style.display = 'flex';
-    document.getElementById('m-wait-turn-text').innerText = `🚨 ${data.tile.title}`;
-    document.getElementById('m-wait-turn-sub').innerText = data.tile.desc;
+    document.getElementById('m-wait-turn-text').innerText = 'Kijk naar het bord!';
+    document.getElementById('m-wait-turn-sub').innerText = 'Wachten op de Scheids...';
   }
   else if (data.type === 'PLAYER_LANDED_PREVIEW') {
     resetMobileBackground();
@@ -1710,6 +1680,35 @@ function hideAllRefCards() {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
+}
+
+function updateRefMediaControls(cardId, mediaType) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const ctrlId = `${cardId}-media-ctrl`;
+  let box = document.getElementById(ctrlId);
+  if (!box) {
+    box = document.createElement('div');
+    box.id = ctrlId;
+    box.style.display = 'none';
+    box.style.gap = '6px';
+    card.insertBefore(box, card.children[2] || null);
+  }
+  if (mediaType === 'audio' || mediaType === 'video') {
+    box.style.display = 'flex';
+    box.innerHTML = `
+      <button class="btn btn-green" style="flex:1; padding:8px; font-size:0.78rem;" onclick="refControlMedia('PLAY')">▶️ Play</button>
+      <button class="btn btn-yellow" style="flex:1; padding:8px; font-size:0.78rem;" onclick="refControlMedia('PAUSE')">⏸️ Pauze</button>
+      <button class="btn btn-blue" style="flex:1; padding:8px; font-size:0.78rem;" onclick="refControlMedia('RESTART')">🔄 Opnieuw</button>
+    `;
+  } else {
+    box.style.display = 'none';
+    box.innerHTML = '';
+  }
+}
+
+function refControlMedia(action) {
+  clientConn.send({ type: 'REF_MEDIA_CONTROL', action });
 }
 
 function renderRefPlayerLists() {
@@ -1839,12 +1838,14 @@ function refShowQuestion() {
     document.getElementById('ref-kd-answers').innerHTML = '<div style="opacity:0.6; font-size:0.85rem;">Wachten op antwoorden van beide spelers...</div>';
     document.getElementById('ref-kd-actions').innerHTML = '';
     document.getElementById('ref-kd-to-board').style.display = 'none';
+    updateRefMediaControls('ref-kopduel-card', currentQ.type);
   } else {
     document.getElementById('ref-judge-card').style.display = 'flex';
     document.getElementById('ref-btn-show-result').style.display = 'none';
     document.getElementById('ref-btn-back-to-board').style.display = 'none';
     document.getElementById('ref-btn-back-to-board').innerText = freePlayMode ? '📚 Kies Volgende Vraag' : '🏟️ Naar Bord';
     document.getElementById('ref-answers-list').innerHTML = '<div style="opacity:0.6; font-size:0.85rem;">Wachten op antwoord...</div>';
+    updateRefMediaControls('ref-judge-card', currentQ.type);
   }
   clientConn.send({ type: 'REF_SHOW_QUESTION' });
 }
@@ -1937,7 +1938,7 @@ function handleRefIncomingData(data) {
     currentQ = data.question;
 
     document.getElementById('ref-pre-question-card').style.display = 'flex';
-    document.getElementById('ref-pre-cat').innerHTML = data.freePlayMode ? `${data.categoryName} (P${data.question.priority || 2})` : `${data.categoryName} (Vak ${data.tileNum} • P${data.question.priority || 2})`;
+    document.getElementById('ref-pre-cat').innerHTML = data.freePlayMode ? `${data.categoryName} (P${data.question.priority})` : `${data.categoryName} (Vak ${data.tileNum} • P${data.question.priority})`;
     document.getElementById('ref-pre-title').innerText = data.freePlayMode ? 'Groepsvraag klaar!' : `${data.playerName} staat op het bord!`;
     document.getElementById('ref-preview-q').innerText = data.question.q;
     document.getElementById('ref-preview-a').innerText = data.question.a;
@@ -2074,6 +2075,7 @@ function refPickKopduelWinner(winnerId) {
   btn.onclick = () => {
     clientConn.send({ type: 'REF_CONTINUE_AFTER_KOPDUEL' });
   };
+  updateRefMediaControls('ref-kopduel-card', currentQ.ansType);
   clientConn.send({ type: 'REF_KOPDUEL_VERDICT', outcome: 'WIN', winnerId });
 }
 
@@ -2120,6 +2122,7 @@ function refMarkAnswer(pId, isCorrect) {
 function refShowResult() {
   document.getElementById('ref-btn-show-result').style.display = 'none';
   document.getElementById('ref-btn-back-to-board').style.display = 'inline-flex';
+  updateRefMediaControls('ref-judge-card', currentQ.ansType);
   clientConn.send({
     type: 'REF_SHOW_RESULT',
     verdicts: roundVerdicts
